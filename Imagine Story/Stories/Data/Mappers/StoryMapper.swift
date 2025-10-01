@@ -15,6 +15,8 @@ class StoryMapper {
             synopsis: storyDTO.synopsis,
             coverImage: "http://localhost:3333/images/covers/\(storyDTO.coverImage)",
             numberOfChapters: storyDTO.numberOfChapters,
+            tone: storyDTO.tone,
+            theme: storyDTO.theme,
 //            userId: storyDTO.userId,
 //            slug: storyDTO.slug,
 //            conclusion: storyDTO.conclusion,

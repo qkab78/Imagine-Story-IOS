@@ -7,12 +7,14 @@
 
 import Foundation
 
-struct Story: Identifiable {
+struct Story: Identifiable, Hashable, Codable {
     let id: String
     let title: String
     let synopsis: String
     let coverImage: String
     let numberOfChapters: Int
+    let tone: String
+    let theme: String
 //    let userId: String
 //    let slug: String
 //    let conclusion: String

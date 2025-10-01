@@ -13,7 +13,7 @@ struct StoryListView: View {
     @State private var user = User(firstName: "Quentin")
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Chargement...")
@@ -73,33 +73,36 @@ struct StoryCardView: View {
     @Binding var story: Story
 
     var body: some View {
-        HStack(spacing: 8) {
-            // Cover Image
-            AsyncImage(url: URL(string: story.coverImage)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                Circle()
-            }
-            .frame(width: 80, height: 80)
-            .clipShape(Circle())
-            
-            Spacer()
-            
-            VStack(alignment: .leading) {
-                Text(story.title)
-                    .font(.headline)
-                    .foregroundColor(greenLinearGradientBackground)
-                    .frame(maxWidth: 300, alignment: .leading)
+        NavigationLink {
+            StoryReadView(storyId: story.id)
+        } label: {
+            HStack(spacing: 8) {
+                // Cover Image
+                AsyncImage(url: URL(string: story.coverImage)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    Circle()
+                }
+                .frame(width: 80, height: 80)
+                .clipShape(Circle())
                 
-                Text("\(story.numberOfChapters) chapitres")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Spacer()
+                
+                VStack(alignment: .leading) {
+                    Text(story.title)
+                        .font(.subheadline)
+                        .foregroundColor(greenLinearGradientBackground)
+                        .frame(maxWidth: 300, alignment: .leading)
+                    
+                    Text("\(story.numberOfChapters) chapitres")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
             }
-            
         }
-
     }
 }
 
