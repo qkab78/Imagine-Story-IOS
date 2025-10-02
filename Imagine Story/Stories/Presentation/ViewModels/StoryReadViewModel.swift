@@ -22,8 +22,22 @@ class StoryReadViewModel: ObservableObject {
         do {
             let result = try await getStoryByIdUseCase.execute(id: id)
             story = result
+            print(story)
         } catch {
             errorMessage = "Une erreur est survenue lors du chargement des histoires : \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
+    
+    func likeStory(id: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            print("Story \(id) liked!")
+        } catch {
+            errorMessage = "Une erreur est survenue lors de l'ajout de l'histoire aux favoris : \(error.localizedDescription)"
         }
         
         isLoading = false

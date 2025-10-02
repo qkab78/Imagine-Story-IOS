@@ -1,0 +1,13 @@
+//
+//  StoryChapter.swift
+//  Imagine Story
+//
+//  Created by Quentin Kabasele on 02/10/2025.
+//
+
+import Foundation
+
+struct StoryChapter: Codable {
+    let title: String
+    let content: String
+}

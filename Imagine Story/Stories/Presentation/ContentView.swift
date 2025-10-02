@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var stories: [Story] = []
     @State private var user = User(firstName: "Quentin")
     
     var body: some View {
@@ -16,8 +15,6 @@ struct ContentView: View {
             HeaderView(user: $user)
             // HeroSectionView
             HeroSectionView()
-            // Stories
-            StoriesContainerView(stories: $stories)
             
         }
         .ignoresSafeArea()
@@ -26,18 +23,6 @@ struct ContentView: View {
                 .edgesIgnoringSafeArea(.all)
         }
         .task {
-//            do {
-//                stories = try await getStories()
-//                print("Stories fetched successfully: \(stories)")
-//            } catch StoryError.invalidData {
-//                print("Error fetching stories: Invalid data")
-//            } catch StoryError.invalidURL {
-//                print("Error fetching stories: Invalid URL")
-//            } catch StoryError.invalidResponse {
-//                print("Error fetching stories: Invalid response")
-//            } catch {
-//                print("Unexpected error")
-//            }
         }
     }
 }
@@ -52,40 +37,10 @@ let tealLinearGradientBackground = Color(red: 0.012, green: 0.855, blue: 0.776)
 
 let ViewLinearGradientBackground = LinearGradient(colors:[Color(red: 1, green: 0.973, blue: 0.882), Color(red: 1, green: 0.878, blue: 0.941)], startPoint: .topLeading, endPoint: .bottomTrailing)
 
-//struct Story: Codable {
-//    let id: String
-//    let title: String
-//    let synopsis: String
-//    let coverImage: String
-//    let numberOfChapters: Int
-//}
-
 struct User: Codable {
     let firstName: String
 }
 
-//func getStories() async throws -> [Story] {
-//    let endpoint = "\(baseURL)/stories"
-//    guard let url = URL(string: endpoint) else {
-//        throw StoryError.invalidURL
-//    }
-//    
-//    let (data, response) = try await URLSession.shared.data(from:url)
-//    
-//    guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-//        throw StoryError.invalidResponse
-//    }
-//    
-//    do {
-//        let decoder = JSONDecoder()
-//        decoder.keyDecodingStrategy = .convertFromSnakeCase
-//        
-//        
-//        return try decoder.decode([Story].self, from: data)
-//    } catch {
-//        throw StoryError.invalidData
-//    }
-//}
 func goToStoryCreationPage() {
     print("navigating to story creation page")
 }
@@ -94,58 +49,6 @@ enum StoryError: Error {
     case invalidData
     case invalidURL
 }
-
-//struct StoriesContainerView: View {
-//    @Binding var stories: [Story]
-//    var body: some View {
-//        VStack(alignment: .leading) {
-//            Text("✨ Histoires récentes")
-//                .font(.headline)
-//                .fontWeight(.bold)
-//                .foregroundColor(greenLinearGradientBackground)
-//            
-//            LazyVStack(spacing: 32) {
-//                ForEach($stories, id: \.id) { story in
-//                     StoryCardView(story: story)
-//                    Divider()
-//                }
-//            }
-//            .padding()
-//            .background(.white)
-//            .frame(width: 370)
-//            .clipShape(RoundedRectangle(cornerRadius: 20))
-//        }
-//        .padding(.top)
-//        
-//    }
-//}
-//struct StoryCardView: View {
-//    @Binding var story: Story
-//    
-//    var body: some View {
-//        HStack {
-//            // Cover Image
-//            AsyncImage(url: URL(string: "\(baseURL)/images/covers/\(story.coverImage)")) { image in
-//                image
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fit)
-//            } placeholder: {
-//                Rectangle()
-//            }
-//            .frame(width: 56, height: 56)
-//            .clipShape(Circle())
-//            
-//            VStack(alignment: .leading) {
-//                Text(story.title)
-//                    .font(.headline)
-//                    .foregroundColor(greenLinearGradientBackground)
-//                Text(story.synopsis)
-//                    .font(.caption)
-//                    .foregroundColor(.secondary)
-//            }
-//        }
-//    }
-//}
 
 struct HeroSectionView: View {
     var body: some View {

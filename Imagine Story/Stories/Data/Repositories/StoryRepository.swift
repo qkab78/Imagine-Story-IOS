@@ -36,4 +36,12 @@ class StoryRepository {
             fatalError("Error fetching story by id: \(error)")
         }
     }
+    
+    func LikeStory(id: String) async throws {
+        do {
+            try await storiesDataSource.getStoryById(id: id)
+        } catch {
+            fatalError("Error liking story: \(error)")
+        }
+    }
 }

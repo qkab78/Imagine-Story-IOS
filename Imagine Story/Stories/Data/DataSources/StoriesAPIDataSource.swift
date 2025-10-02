@@ -70,4 +70,14 @@ class StoriesApiDataSource {
             throw StoriesAPIDataSourceError.decodingFailed
         }
     }
+    
+    func likeStory(id: String) async throws {
+        let endpoint = "http://localhost:3333/stories/\(id)/like"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        // @todo: Implement like method in the API
+        return
+    }
 }

@@ -9,6 +9,15 @@ import Foundation
 
 class StoryMapper {
     static func map(storyDTO: StoryDTO) -> Story {
+        var chapters: [StoryChapter] = []
+        var chapterImages: [StoryChapterImage] = []
+
+        storyDTO.chapters.forEach { chapter in
+            chapters.append(StoryChapter(title: chapter.title, content: chapter.content))
+        }
+        storyDTO.chapterImages.forEach { image in
+            chapterImages.append(StoryChapterImage(chapterIndex: image.chapterIndex, imageUrl: "http://localhost:3333/images/chapters/\(image.imageUrl)"))
+        }
         return Story(
             id: storyDTO.id,
             title: storyDTO.title,
@@ -19,10 +28,11 @@ class StoryMapper {
             theme: storyDTO.theme,
 //            userId: storyDTO.userId,
 //            slug: storyDTO.slug,
-//            conclusion: storyDTO.conclusion,
-//            chapters: storyDTO.chapters,
-//            chapterImages: storyDTO.chapterImages,
+            conclusion: storyDTO.conclusion,
+            chapters: chapters,
+            chapterImages: chapterImages,
             createdAt: storyDTO.createdAt,
+            isLiked: false
         )
     }
 }

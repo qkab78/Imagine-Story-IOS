@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Story: Identifiable, Hashable, Codable {
+struct Story: Identifiable {
     let id: String
     let title: String
     let synopsis: String
@@ -17,8 +17,9 @@ struct Story: Identifiable, Hashable, Codable {
     let theme: String
 //    let userId: String
 //    let slug: String
-//    let conclusion: String
-//    let chapters: [StoryChapterDTO]
-//    let chapterImages: [StoryChapterImageDTO]
+    let conclusion: String
+    let chapters: [StoryChapter]
+    let chapterImages: [StoryChapterImage]
     let createdAt: String
+    let isLiked: Bool
 }

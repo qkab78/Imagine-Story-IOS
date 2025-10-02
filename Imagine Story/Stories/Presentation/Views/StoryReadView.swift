@@ -26,7 +26,7 @@ struct StoryReadView: View {
                     ScrollView {
                         StoryHeaderView(story: viewModel.story!)
                         
-                        StoryInfoView(story: viewModel.story!)
+                        StoryInfoView(viewModel: viewModel, story: viewModel.story!)
                             .padding(.horizontal)
                     }
                     .ignoresSafeArea()
@@ -47,12 +47,6 @@ struct StoryHeaderView: View {
     var story: Story
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Text("Retour")
-                Spacer()
-                Text("Like")
-            }
-            
             AsyncImage(url: URL(string: story.coverImage)) { image in
                 image
                     .resizable()
@@ -76,6 +70,7 @@ struct StoryHeaderView: View {
 }
 
 struct StoryInfoView: View {
+    var viewModel: StoryReadViewModel?
     var story: Story
     var body: some View {
         Grid {
@@ -125,6 +120,20 @@ struct StoryInfoView: View {
                 .padding(12)
                 .background(Color.gray.opacity(0.2))
                 .gridColumnAlignment(.leading)
+                
+                
+                Button {
+                    Task {
+                        await viewModel?.likeStory(id: story.id)
+                    }
+                } label: {
+                    Image(systemName: story.isLiked ? "heart.fill" : "heart")
+                        .padding()
+                        .background(.white)
+                        .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .foregroundColor(.red)
+                }
             }
             
             GridRow {
