@@ -72,7 +72,6 @@ struct StoryLectureView: View {
                             
                             HStack {
                                 Text("Chapitre \(selectedChapter + 1) sur \(viewModel.story!.numberOfChapters)")
-                                Text("Show conclusion: \(showConclusion)")
                             }
                             .padding()
                             
@@ -126,7 +125,9 @@ struct StoryLectureView: View {
                                 }
                             }
                             .padding()
+                            .frame(height: 10)
                         }
+                        .padding()
                     }
                 }
             }
