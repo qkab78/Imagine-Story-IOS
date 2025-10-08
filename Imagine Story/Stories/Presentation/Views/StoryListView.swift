@@ -10,7 +10,7 @@ import SwiftUI
 
 struct StoryListView: View {
     @StateObject var viewModel = StoryListViewModel()
-    @State private var user = User(firstName: "Quentin")
+    @State private var user = User.MOCK_USER
     
     var body: some View {
         NavigationStack {
@@ -24,7 +24,7 @@ struct StoryListView: View {
                         .padding()
                 } else {
                     ScrollView {
-                        HeaderView(user: $user)
+                        HeaderView(user: user)
                         // HeroSectionView
                         HeroSectionView()
                         // Stories

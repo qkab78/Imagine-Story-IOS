@@ -14,7 +14,8 @@ struct RegistrationView: View {
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
     @Environment(\.dismiss) var dismiss
-    
+    @EnvironmentObject var viewModel: AuthViewModel
+
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in

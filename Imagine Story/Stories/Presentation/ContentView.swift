@@ -8,21 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var user = User(firstName: "Quentin")
+    @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
-        ScrollView {
-            HeaderView(user: $user)
-            // HeroSectionView
-            HeroSectionView()
-            
-        }
-        .ignoresSafeArea()
-        .background {
-            ViewLinearGradientBackground
-                .edgesIgnoringSafeArea(.all)
-        }
-        .task {
+        Group {
+            if viewModel.isLoading == true {
+                 ProgressView("Chargement...")
+            }  else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            } else if viewModel.user != nil {
+                ScrollView {
+                    HeaderView(user: viewModel.user!)
+                    // HeroSectionView
+                    HeroSectionView()
+                    
+                }
+                .ignoresSafeArea()
+                .background {
+                    ViewLinearGradientBackground
+                        .edgesIgnoringSafeArea(.all)
+                }
+            } else {
+                LoginView()
+            }
         }
     }
 }
@@ -37,7 +48,7 @@ let tealLinearGradientBackground = Color(red: 0.012, green: 0.855, blue: 0.776)
 
 let ViewLinearGradientBackground = LinearGradient(colors:[Color(red: 1, green: 0.973, blue: 0.882), Color(red: 1, green: 0.878, blue: 0.941)], startPoint: .topLeading, endPoint: .bottomTrailing)
 
-struct User: Codable {
+struct User1: Codable {
     let firstName: String
 }
 
@@ -122,7 +133,8 @@ struct HeroSectionView: View {
 }
 
 struct HeaderView: View {
-    @Binding var user: User
+    let user: User
+
     @State private var selected = true
     
     var body: some View {
@@ -138,7 +150,7 @@ struct HeaderView: View {
             }
         
             Spacer()
-            Text(user.firstName.first?.uppercased() ?? "")
+            Text(user.initials)
                 .foregroundColor(.white)
                 .font(.title)
                 .fontWeight(.bold)

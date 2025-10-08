@@ -11,6 +11,7 @@ struct LoginView: View {
     @State var appTitle: String = "Imagine Story"
     @State var email: String = ""
     @State var password: String = ""
+    @EnvironmentObject var viewModel: AuthViewModel
 
     let linearBackgroundColor = LinearGradient(colors: [
         Color(red: 0.89, green: 0.949, blue: 0.992),
@@ -51,7 +52,9 @@ struct LoginView: View {
                     }
                     // Sign in button
                     Button {
-                        print("Sign in button pressed")
+                        Task {
+                            try await viewModel.login(email: email, password: password)
+                        }
                     } label: {
                         HStack {
                             Text("Se connecter")
@@ -81,10 +84,6 @@ struct LoginView: View {
                 }
                 .padding()
             }
-        }
-        .background {
-            linearBackgroundColor
-                .edgesIgnoringSafeArea(.all)
         }
     }
 }
