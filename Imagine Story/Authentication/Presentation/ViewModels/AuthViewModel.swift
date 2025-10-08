@@ -14,20 +14,40 @@ class AuthViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let loginUserUseCase = LoginUserUseCase()
+    private let authStoreKey = "user"
 
-    func login(email: String, password: String) async throws -> User {
+    init() {
+        loadUserFromDefaults()
+    }
+
+    func login(email: String, password: String) async throws {
         isLoading = true
         errorMessage = nil
         
         do {
             let result = try await loginUserUseCase.execute(email: email, password: password)
             user = result
+            saveUserToDefaults()
         } catch {
             errorMessage = "Une erreur est survenue lors de la connexion. Veuillez réessayer ultérieurement."
-            print(error.localizedDescription)
+            print("Une erreur est survenue lors de la connexion : \(error.localizedDescription)")
         }
         isLoading = false
-        
-        return user!
+    }
+    
+    private func loadUserFromDefaults() {
+        if let data = UserDefaults.standard.data(forKey: authStoreKey) {
+            do {
+                self.user = try JSONDecoder().decode(User.self, from: data)
+            } catch {
+                print("Erreur de decoding du user : \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func saveUserToDefaults() {
+        if let encodedUser = try? JSONEncoder().encode(user) {
+            UserDefaults.standard.set(encodedUser, forKey: authStoreKey)
+        }
     }
 }
