@@ -19,7 +19,9 @@ struct ContentView: View {
                 Tab("Home", systemImage: "house", value: 0) {
                     HomeView()
                 }
-                Tab("Stories", systemImage: "book.pages", value: 1) {}
+                Tab("Stories", systemImage: "book.pages", value: 1) {
+                    StorySearchView()
+                }
                 
                 Tab("Profile", systemImage: "gear", value: 2) {
                     ProfileView()
@@ -33,7 +35,7 @@ struct ContentView: View {
                 }
             }
             .tabViewStyle(.sidebarAdaptable)
-            .tabViewSearchActivation(.automatic)
+            .tabBarMinimizeBehavior(.onScrollDown)
         }
     }
 }
@@ -42,32 +44,7 @@ struct HomeView: View {
     @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
-        Group {
-            if viewModel.isLoading {
-                ProgressView("Chargement...")
-            }  else if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-                    .padding()
-            }
-            else if viewModel.user != nil {
-                ScrollView {
-                    HeaderView(user: viewModel.user ?? User.MOCK_USER)
-                    // HeroSectionView
-                    HeroSectionView()
-                    
-                }
-                .ignoresSafeArea()
-                .background {
-                    ViewLinearGradientBackground
-                        .edgesIgnoringSafeArea(.all)
-                }
-            }
-            else {
-                LoginView()
-            }
-        }
+        StoryListView()
     }
 }
 
@@ -94,7 +71,9 @@ struct HeroSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
                 VStack(alignment: .leading, spacing: 16) {
-                    Button(action: goToStoryCreationPage) {
+                    NavigationLink {
+                        StoryCreationView()
+                    } label: {
                         HStack(spacing: 32) {
                             Text("✨")
                                 .foregroundColor(.white)
@@ -117,13 +96,14 @@ struct HeroSectionView: View {
                                     .foregroundColor(.gray)
                             }.frame(maxWidth: .infinity)
                         }
-                        
+                        .padding()
+                        .background(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .padding()
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     
-                    Button(action: goToStoryCreationPage) {
+                    NavigationLink {
+                        StorySearchView()
+                    } label: {
                         HStack() {
                             Text("📖")
                                 .foregroundColor(.white)
@@ -148,12 +128,10 @@ struct HeroSectionView: View {
                                     .foregroundColor(.gray)
                             }.frame(maxWidth: .infinity)
                         }
-                        
+                        .padding()
+                        .background(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .padding()
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    
                     
                 }
                 .padding(.horizontal)
@@ -200,6 +178,7 @@ struct HeaderView: View {
         .padding(.horizontal, 24)
     }
 }
+
 #Preview {
     ContentView()
         .environmentObject(AuthViewModel())

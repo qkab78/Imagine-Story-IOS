@@ -1,5 +1,5 @@
 //
-//  SwiftUIView.swift
+//  StoryCreationView.swift
 //  Imagine Story
 //
 //  Created by Quentin Kabasele on 23/10/2025.
@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct StorySearchView: View {
+struct StoryCreationView: View {
     var body: some View {
-        Text("Story Search View")
+        Text("Story creation view")
     }
 }
 
 #Preview {
-    StorySearchView()
+    StoryCreationView()
 }
