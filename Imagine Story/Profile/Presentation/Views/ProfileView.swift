@@ -32,7 +32,7 @@ struct ProfileView: View {
                 }
             }
             
-            Section("Général") {
+            Section(ProfileViewConstants.generalSectionTitle) {
                 HStack {
                     SettingsRowView(imageName: "gear", title: "Version", tintColor: Color(.systemGray))
                     Spacer()
@@ -42,7 +42,7 @@ struct ProfileView: View {
                 }
             }
             
-            Section("Compte") {
+            Section(ProfileViewConstants.accountSectionTitle) {
                 Button {
                     print("Sign out")
                 } label: {

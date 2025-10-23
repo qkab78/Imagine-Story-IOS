@@ -43,7 +43,7 @@ struct LoginView: View {
                     } label: {
                         HStack(spacing: 3) {
                             Text("Mot de passe oublié ?")
-                            Text("🤔")
+                            Text("🤔") 
                                 .fontWeight(.bold)
                         }
                         .font(.footnote)

@@ -49,6 +49,9 @@ struct RegistrationView: View {
                     // Sign up button
                     Button {
                         print("Sign up button pressed")
+                        Task {
+                            try await viewModel.register(firstname: firstName, lastname: lastName, email: email, password: password, confirmPassword: confirmPassword)
+                        }
                     } label: {
                         HStack {
                             Text("Créer un compte")

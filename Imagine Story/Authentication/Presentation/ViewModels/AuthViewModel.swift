@@ -14,12 +14,42 @@ class AuthViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let loginUserUseCase = LoginUserUseCase()
+    private let registerUserUseCase = RegisterUserUseCase()
     private let authStoreKey = "user"
 
     init() {
         loadUserFromDefaults()
     }
 
+    func register(
+        firstname: String,
+        lastname: String,
+        email: String,
+        password: String,
+        confirmPassword: String
+    ) async throws {
+        if user != nil {
+            errorMessage = "Vous êtes déjà connecté."
+            return
+        }
+        if password != confirmPassword {
+            errorMessage = "Les mots de passe ne correspondent pas."
+            return
+        }
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let result = try await registerUserUseCase.execute(firstname: firstname, lastname: lastname, email: email, password: password, confirmPassword: confirmPassword)
+            user = result
+            saveUserToDefaults()
+        }
+        catch {
+            errorMessage = "Une erreur est survenue lors de la création de compte. Veuillez réessayer ultérieurement."
+            print("Une erreur est survenue lors de la création de compte : \(error.localizedDescription)")
+        }
+        isLoading = false
+    }
     func login(email: String, password: String) async throws {
         isLoading = true
         errorMessage = nil
