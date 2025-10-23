@@ -28,8 +28,6 @@ class UserRepository {
             return UserMapper.map(from: user)
         } catch {
             print(error.localizedDescription)
-            print(error)
-            print("Une erreur est survenue lors de la tentative d'enregistrement")
             throw error
         }
     }
@@ -40,8 +38,6 @@ class UserRepository {
             return UserMapper.map(from: user)
         } catch {
             print(error.localizedDescription)
-            print(error)
-            print("Une erreur est survenue lors de la tentative de connexion")
             throw error
         }
     }
@@ -51,7 +47,6 @@ class UserRepository {
             try await userDataSource.logout()
         } catch {
             print(error.localizedDescription)
-            print(error)
             throw error
         }
     }

@@ -34,7 +34,7 @@ struct RegistrationView: View {
                     
                     // Form fields
                     VStack(spacing: 24) {
-                        InputView(text: $firstName, title: "Prénom", placeholder: "Entrz votre prénom")
+                        InputView(text: $firstName, title: "Prénom", placeholder: "Entrez votre prénom")
 
                         InputView(text: $lastName, title: "Nom de famille", placeholder: "Entrez votre nom de famille")
 

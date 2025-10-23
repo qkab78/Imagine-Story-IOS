@@ -6,8 +6,8 @@
 //
 
 struct ProfileViewConstants {
-    static let generalSectionTitle: String = "General"
-    static let privacySectionTitle: String = "Privacy"
-    static let accountSectionTitle: String = "Account"
-    static let logoutActionTitle: String = "Logout"
+    static let generalSectionTitle: String = "Général"
+    static let privacySectionTitle: String = "Confidentialité"
+    static let accountSectionTitle: String = "Compte"
+    static let logoutActionTitle: String = "Déconnexion"
 }

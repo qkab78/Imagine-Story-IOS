@@ -77,7 +77,7 @@ class AuthViewModel: ObservableObject {
             do {
                 self.user = try JSONDecoder().decode(User.self, from: data)
             } catch {
-                print("Erreur de decoding du user : \(error.localizedDescription)")
+                print("Erreur de décodage du user : \(error.localizedDescription)")
             }
         }
     }
