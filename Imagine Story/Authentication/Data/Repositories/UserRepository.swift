@@ -44,7 +44,5 @@ class UserRepository {
         }
     }
     
-    func register() {}
-    
     func logout() {}
 }
