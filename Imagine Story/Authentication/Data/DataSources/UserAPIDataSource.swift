@@ -113,7 +113,7 @@ class UserAPIDataSource {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        let (_, response) = try await URLSession.shared.data(for: urlRequest)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
             throw UserAPIDataSourceError.invalidResponse
         }

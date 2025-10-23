@@ -20,10 +20,8 @@ struct ContentView: View {
                 }
                 Tab("Search", systemImage: "magnifyingglass") {}
                 
-                if viewModel.user != nil {
-                    Tab("Profile", systemImage: "gear") {
-                        ProfileView()
-                    }
+                Tab("Profile", systemImage: "gear") {
+                    ProfileView()
                 }
              }
         }
@@ -35,7 +33,7 @@ struct HomeView: View {
     
     var body: some View {
         Group {
-            if viewModel.isLoading == true {
+            if viewModel.isLoading {
                 ProgressView("Chargement...")
             }  else if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -45,7 +43,7 @@ struct HomeView: View {
             }
             else if viewModel.user != nil {
                 ScrollView {
-                    HeaderView(user: viewModel.user!)
+                    HeaderView(user: viewModel.user ?? User.MOCK_USER)
                     // HeroSectionView
                     HeroSectionView()
                     
@@ -198,4 +196,5 @@ struct HeaderView: View {
 }
 #Preview {
     ContentView()
+        .environmentObject(AuthViewModel())
 }

@@ -29,7 +29,8 @@ class UserRepository {
         } catch {
             print(error.localizedDescription)
             print(error)
-            fatalError("Une erreur est survenue lors de la tentative d'enregistrement")
+            print("Une erreur est survenue lors de la tentative d'enregistrement")
+            throw error
         }
     }
 
@@ -40,7 +41,8 @@ class UserRepository {
         } catch {
             print(error.localizedDescription)
             print(error)
-            fatalError("Une erreur est survenue lors de la tentative de connexion")
+            print("Une erreur est survenue lors de la tentative de connexion")
+            throw error
         }
     }
     
@@ -50,6 +52,7 @@ class UserRepository {
         } catch {
             print(error.localizedDescription)
             print(error)
+            throw error
         }
     }
 }

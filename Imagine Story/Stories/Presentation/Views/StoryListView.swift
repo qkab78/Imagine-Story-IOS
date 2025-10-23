@@ -108,4 +108,5 @@ struct StoryCardView: View {
 
 #Preview {
     StoryListView()
+        .environmentObject(StoryListViewModel())
 }

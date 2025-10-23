@@ -31,9 +31,9 @@ struct LoginView: View {
                     
                     // Form fields
                     VStack(spacing: 24) {
-                        InputView(text: $email, title: "Email", placeholder: "Enter your email address")
+                        InputView(text: $email, title: "Adresse email", placeholder: "Entrez votre adresse email")
                         
-                        InputView(text: $password, title: "Password", placeholder: "Enter your password", isSecureField: true)
+                        InputView(text: $password, title: "Mot de passe", placeholder: "Entrez votre mot de passe", isSecureField: true)
                     }
                     .padding(.top, 12)
                     

@@ -34,15 +34,15 @@ struct RegistrationView: View {
                     
                     // Form fields
                     VStack(spacing: 24) {
-                        InputView(text: $firstName, title: "First Name", placeholder: "Enter your first name")
+                        InputView(text: $firstName, title: "Prénom", placeholder: "Entrz votre prénom")
 
-                        InputView(text: $lastName, title: "Last Name", placeholder: "Enter your last name")
+                        InputView(text: $lastName, title: "Nom de famille", placeholder: "Entrez votre nom de famille")
 
-                        InputView(text: $email, title: "Email", placeholder: "Enter your email address")
+                        InputView(text: $email, title: "Adresse email", placeholder: "Entrez votre adresse email")
                         
-                        InputView(text: $password, title: "Password", placeholder: "Enter your password", isSecureField: true)
+                        InputView(text: $password, title: "Mot de passe", placeholder: "Entrez votre mot de passe", isSecureField: true)
                         
-                        InputView(text: $confirmPassword, title: "Confirm Password", placeholder: "Confirm your password", isSecureField: true)
+                        InputView(text: $confirmPassword, title: "Confirmation du mot de passe", placeholder: "Confirmez votre mot de passe", isSecureField: true)
                     }
                     .padding(.top, 12)
                     

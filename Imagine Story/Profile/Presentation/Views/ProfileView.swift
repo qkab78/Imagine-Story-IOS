@@ -52,12 +52,14 @@ struct ProfileView: View {
                 } label: {
                     SettingsRowView(imageName: "arrow.left.circle.fill", title: ProfileViewConstants.logoutActionTitle, tintColor: .red)
                 }
-                
+                // @todo: Implement the Delete account feature then enable the button
                 Button {
                     print("Deleting account....")
                 } label: {
                     SettingsRowView(imageName: "xmark.circle.fill", title: "Supprimer le compte", tintColor: .red)
                 }
+                .disabled(true)
+                .opacity(0.5)
             }
         }
     }
@@ -65,4 +67,5 @@ struct ProfileView: View {
 
 #Preview {
     ProfileView()
+        .environmentObject(AuthViewModel())
 }
