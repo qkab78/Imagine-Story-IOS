@@ -11,15 +11,39 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
+        if viewModel.user == nil {
+            LoginView()
+        } else {
+            TabView {
+                Tab("Home", systemImage: "house") {
+                    HomeView()
+                }
+                Tab("Search", systemImage: "magnifyingglass") {}
+                
+                if viewModel.user != nil {
+                    Tab("Profile", systemImage: "gear") {
+                        ProfileView()
+                    }
+                }
+             }
+        }
+    }
+}
+
+struct HomeView: View {
+    @EnvironmentObject var viewModel: AuthViewModel
+    
+    var body: some View {
         Group {
             if viewModel.isLoading == true {
-                 ProgressView("Chargement...")
+                ProgressView("Chargement...")
             }  else if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
                     .padding()
-            } else if viewModel.user != nil {
+            }
+            else if viewModel.user != nil {
                 ScrollView {
                     HeaderView(user: viewModel.user!)
                     // HeroSectionView
@@ -31,7 +55,8 @@ struct ContentView: View {
                     ViewLinearGradientBackground
                         .edgesIgnoringSafeArea(.all)
                 }
-            } else {
+            }
+            else {
                 LoginView()
             }
         }

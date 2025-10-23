@@ -44,5 +44,12 @@ class UserRepository {
         }
     }
     
-    func logout() {}
+    func logout() async throws -> Void {
+        do {
+            try await userDataSource.logout()
+        } catch {
+            print(error.localizedDescription)
+            print(error)
+        }
+    }
 }

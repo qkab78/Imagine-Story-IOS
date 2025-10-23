@@ -1,5 +1,5 @@
 //
-//  USerAPIDataSource.swift
+//  UserAPIDataSource.swift
 //  Imagine Story
 //
 //  Created by Quentin Kabasele on 08/10/2025.
@@ -100,6 +100,22 @@ class UserAPIDataSource {
             return user
         } catch {
             throw UserAPIDataSourceError.decodingFailed
+        }
+    }
+    
+    func logout() async throws -> Void {
+        let endpoint = "http://localhost:3333/auth/logout"
+        
+        guard let url = URL(string: endpoint) else {
+            throw UserAPIDataSourceError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
+            throw UserAPIDataSourceError.invalidResponse
         }
     }
 }

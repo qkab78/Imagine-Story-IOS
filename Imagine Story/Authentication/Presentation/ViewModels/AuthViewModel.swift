@@ -15,6 +15,7 @@ class AuthViewModel: ObservableObject {
     
     private let loginUserUseCase = LoginUserUseCase()
     private let registerUserUseCase = RegisterUserUseCase()
+    private let logoutUserUseCase = LogoutUserUseCase()
     private let authStoreKey = "user"
 
     init() {
@@ -63,6 +64,12 @@ class AuthViewModel: ObservableObject {
             print("Une erreur est survenue lors de la connexion : \(error.localizedDescription)")
         }
         isLoading = false
+    }
+    
+    func logout() async throws -> Void {
+        try await logoutUserUseCase.execute()
+        user = nil
+        UserDefaults.standard.removeObject(forKey: authStoreKey)
     }
     
     private func loadUserFromDefaults() {

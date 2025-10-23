@@ -9,11 +9,13 @@ import SwiftUI
 
 struct ProfileView: View {
     let appVersion = "1.0.0"
+    @EnvironmentObject var viewModel: AuthViewModel
+
     var body: some View {
         List {
             Section {
                 HStack(spacing: 8) {
-                    Text(User.MOCK_USER.initials)
+                    Text(viewModel.user?.initials ?? User.MOCK_USER.initials)
                         .font(.title)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
@@ -21,11 +23,11 @@ struct ProfileView: View {
                         .background(Color.gray.opacity(0.7))
                         .clipShape(Circle())
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(User.MOCK_USER.fullName)
+                        Text(viewModel.user?.fullName ?? User.MOCK_USER.fullName)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         
-                        Text(User.MOCK_USER.email)
+                        Text(viewModel.user?.email ?? User.MOCK_USER.email)
                             .font(.footnote)
                             .foregroundColor(.gray)
                     }
@@ -44,9 +46,11 @@ struct ProfileView: View {
             
             Section(ProfileViewConstants.accountSectionTitle) {
                 Button {
-                    print("Sign out")
+                    Task {
+                        try await viewModel.logout()
+                    }
                 } label: {
-                    SettingsRowView(imageName: "arrow.left.circle.fill", title: "Déconnexion", tintColor: .red)
+                    SettingsRowView(imageName: "arrow.left.circle.fill", title: ProfileViewConstants.logoutActionTitle, tintColor: .red)
                 }
                 
                 Button {
