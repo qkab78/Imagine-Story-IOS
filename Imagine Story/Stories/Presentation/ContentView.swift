@@ -9,21 +9,31 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var viewModel: AuthViewModel
-    
+    @SceneStorage("selectedTab") var selectedTab: Int = 0
+
     var body: some View {
         if viewModel.user == nil {
             LoginView()
         } else {
-            TabView {
-                Tab("Home", systemImage: "house") {
+            TabView(selection: $selectedTab) {
+                Tab("Home", systemImage: "house", value: 0) {
                     HomeView()
                 }
-                Tab("Search", systemImage: "magnifyingglass") {}
+                Tab("Stories", systemImage: "book.pages", value: 1) {}
                 
-                Tab("Profile", systemImage: "gear") {
+                Tab("Profile", systemImage: "gear", value: 2) {
                     ProfileView()
                 }
-             }
+                if selectedTab == 1 || selectedTab == 3 {
+                    Tab("Search", systemImage: "magnifyingglass", value: 3, role: .search) {
+                        Button("Label") {
+                            
+                        }.buttonStyle(.glass)
+                    }
+                }
+            }
+            .tabViewStyle(.sidebarAdaptable)
+            .tabViewSearchActivation(.automatic)
         }
     }
 }
