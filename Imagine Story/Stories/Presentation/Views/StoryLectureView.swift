@@ -140,4 +140,5 @@ struct StoryLectureView: View {
 
 #Preview {
     StoryLectureView()
+        .environmentObject(StoryReadViewModel())
 }

@@ -8,21 +8,55 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var user = User(firstName: "Quentin")
+    @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
-        ScrollView {
-            HeaderView(user: $user)
-            // HeroSectionView
-            HeroSectionView()
-            
+        if viewModel.user == nil {
+            LoginView()
+        } else {
+            TabView {
+                Tab("Home", systemImage: "house") {
+                    HomeView()
+                }
+                Tab("Search", systemImage: "magnifyingglass") {}
+                
+                Tab("Profile", systemImage: "gear") {
+                    ProfileView()
+                }
+             }
         }
-        .ignoresSafeArea()
-        .background {
-            ViewLinearGradientBackground
-                .edgesIgnoringSafeArea(.all)
-        }
-        .task {
+    }
+}
+
+struct HomeView: View {
+    @EnvironmentObject var viewModel: AuthViewModel
+    
+    var body: some View {
+        Group {
+            if viewModel.isLoading {
+                ProgressView("Chargement...")
+            }  else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+            else if viewModel.user != nil {
+                ScrollView {
+                    HeaderView(user: viewModel.user ?? User.MOCK_USER)
+                    // HeroSectionView
+                    HeroSectionView()
+                    
+                }
+                .ignoresSafeArea()
+                .background {
+                    ViewLinearGradientBackground
+                        .edgesIgnoringSafeArea(.all)
+                }
+            }
+            else {
+                LoginView()
+            }
         }
     }
 }
@@ -36,10 +70,6 @@ let blueLinearGradientBackground = Color(red: 0.129, green: 0.588, blue: 0.953)
 let tealLinearGradientBackground = Color(red: 0.012, green: 0.855, blue: 0.776)
 
 let ViewLinearGradientBackground = LinearGradient(colors:[Color(red: 1, green: 0.973, blue: 0.882), Color(red: 1, green: 0.878, blue: 0.941)], startPoint: .topLeading, endPoint: .bottomTrailing)
-
-struct User: Codable {
-    let firstName: String
-}
 
 func goToStoryCreationPage() {
     print("navigating to story creation page")
@@ -122,7 +152,8 @@ struct HeroSectionView: View {
 }
 
 struct HeaderView: View {
-    @Binding var user: User
+    let user: User
+
     @State private var selected = true
     
     var body: some View {
@@ -138,7 +169,7 @@ struct HeaderView: View {
             }
         
             Spacer()
-            Text(user.firstName.first?.uppercased() ?? "")
+            Text(user.initials)
                 .foregroundColor(.white)
                 .font(.title)
                 .fontWeight(.bold)
@@ -161,4 +192,5 @@ struct HeaderView: View {
 }
 #Preview {
     ContentView()
+        .environmentObject(AuthViewModel())
 }
