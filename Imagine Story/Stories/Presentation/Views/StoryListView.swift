@@ -47,25 +47,36 @@ struct StoryListView: View {
 struct StoriesContainerView: View {
     @Binding var stories: [Story]
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("✨ Histoires récentes")
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundColor(greenLinearGradientBackground)
-            
-            LazyVStack(spacing: 32) {
-                ForEach($stories, id: \.id) { story in
-                     StoryCardView(story: story)
-                    Divider()
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("✨ Histoires récentes")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(greenLinearGradientBackground)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .padding()
-            .background(.white)
-            .frame(width: 370)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .padding(.horizontal)
+            
+            Text("Histoires que vous pourriez aimer lire.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .padding(.horizontal)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach($stories, id: \.id) { story in
+                        StoryCardView(story: story)
+                    }
+                }
+                .padding(.horizontal)
+            }
         }
         .padding(.top)
-        
     }
 }
 
@@ -76,33 +87,60 @@ struct StoryCardView: View {
         NavigationLink {
             StoryReadView(storyId: story.id)
         } label: {
-            HStack(spacing: 8) {
-                // Cover Image
-                AsyncImage(url: URL(string: story.coverImage)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    Circle()
+            VStack(alignment: .leading, spacing: 8) {
+                // Cover Image avec effet livre subtil
+                ZStack {
+                    // Couverture principale
+                    AsyncImage(url: URL(string: story.coverImage)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(LinearGradient(
+                                colors: [Color.gray.opacity(0.4), Color.gray.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .overlay(
+                                Image(systemName: "book.closed")
+                                    .foregroundColor(.gray)
+                                    .font(.title2)
+                            )
+                    }
+                    .frame(width: 120, height: 180)
+                    .clipped()
+                    .overlay(
+                        // Reflet très subtil sur la couverture
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.clear,
+                                Color.black.opacity(0.03)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: .black.opacity(0.12), radius: 4, x: 0, y: 3)
                 }
-                .frame(width: 80, height: 80)
-                .clipShape(Circle())
                 
-                Spacer()
-                
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(story.title)
-                        .font(.subheadline)
-                        .foregroundColor(greenLinearGradientBackground)
-                        .frame(maxWidth: 300, alignment: .leading)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                     
                     Text("\(story.numberOfChapters) chapitres")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+                .frame(width: 120, alignment: .leading)
             }
         }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
