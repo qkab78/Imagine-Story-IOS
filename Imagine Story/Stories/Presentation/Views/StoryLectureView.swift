@@ -93,19 +93,12 @@ struct StoryLectureView: View {
                     if selectedChapter == -1 {
                         // Titre de l'histoire sur la couverture
                         Text(viewModel.story!.title ?? "Histoire")
-                            .font(.title)
+                            .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(greenLinearGradientBackground)
-                            .multilineTextAlignment(.center)
+                            
                         
-                        // Afficher une description de l'histoire si elle existe
-                        if let description = viewModel.story!.description {
-                            Text(description)
-                                .font(.subheadline)
-                                .lineSpacing(16)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
+                        
                     } else if showConclusion {
                         Text("Conclusion")
                             .font(.title2)
