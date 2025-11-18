@@ -57,6 +57,7 @@ class AuthViewModel: ObservableObject {
         
         do {
             let result = try await loginUserUseCase.execute(email: email, password: password)
+            print(result)
             user = result
             saveUserToDefaults()
         } catch {
@@ -67,13 +68,43 @@ class AuthViewModel: ObservableObject {
     }
     
     func logout() async throws -> Void {
-        try await logoutUserUseCase.execute()
-        user = nil
-        UserDefaults.standard.removeObject(forKey: authStoreKey)
+        // Vérification et extraction sécurisée du token
+        guard let currentUser = user else {
+            errorMessage = "Vous n'êtes pas connecté."
+            print("❌ Tentative de logout sans utilisateur connecté")
+            return
+        }
+        
+        let token = currentUser.token
+        print("🔐 Début du logout pour l'utilisateur: \(currentUser.email)")
+        
+        do {
+            // Appel de l'API de logout
+            try await logoutUserUseCase.execute(token: token)
+            print("✅ Logout API successful")
+            
+            // Nettoyage local seulement après succès de l'API
+            user = nil
+            UserDefaults.standard.removeObject(forKey: authStoreKey)
+            errorMessage = nil
+            
+            print("✅ Logout complet réussi")
+        } catch {
+            // En cas d'erreur de l'API, on peut quand même nettoyer localement
+            print("❌ Erreur lors du logout API: \(error.localizedDescription)")
+            errorMessage = "Erreur lors de la déconnexion: \(error.localizedDescription)"
+            
+            // Optionnel : nettoyer localement même si l'API échoue
+            // user = nil
+            // UserDefaults.standard.removeObject(forKey: authStoreKey)
+            
+            throw error
+        }
     }
     
     private func loadUserFromDefaults() {
         if let data = UserDefaults.standard.data(forKey: authStoreKey) {
+            print(data)
             do {
                 self.user = try JSONDecoder().decode(User.self, from: data)
             } catch {

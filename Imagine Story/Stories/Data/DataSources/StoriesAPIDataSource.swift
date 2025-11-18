@@ -11,6 +11,7 @@ enum StoriesAPIDataSourceError: Error {
     case invalidURL
     case invalidResponse
     case decodingFailed
+    case encodingFailed
 }
 
 class StoriesApiDataSource {
@@ -79,5 +80,33 @@ class StoriesApiDataSource {
         
         // @todo: Implement like method in the API
         return
+    }
+    
+    func searchSuggestions(payload: String, token: String) async throws -> [StoryDTO] {
+        guard let encodedPayload = payload.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            throw StoriesAPIDataSourceError.encodingFailed
+        }
+        
+        let endpoint = "http://localhost:3333/stories/search/suggestions?query=\(encodedPayload)"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue(token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "GET"
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            return try JSONDecoder().decode([StoryDTO].self, from: data)
+        } catch {
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
     }
 }

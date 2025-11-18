@@ -15,6 +15,8 @@ struct StoryDTO: Codable {
     let numberOfChapters: Int
     let tone: String
     let theme: String
+    let themeName: String
+    let themeDescription: String
     let userId: String
     let slug: String
     let conclusion: String

@@ -18,10 +18,20 @@ struct StoryListView: View {
                 if viewModel.isLoading {
                     ProgressView("Chargement...")
                 } else if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                        .padding()
+                    VStack(spacing: 16) {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                        
+                        Button("Réessayer") {
+                            Task {
+                                await viewModel.retryLoadStories()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
                 } else {
                     ScrollView {
                         HeaderView(user: user)

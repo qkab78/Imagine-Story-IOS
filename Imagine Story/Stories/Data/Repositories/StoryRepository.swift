@@ -7,6 +7,14 @@
 
 import Foundation
 
+enum StoryRepositoryError: Error {
+    case fetchAllStoriesFailed(Error)
+    case fetchLatestStoriesFailed(Error)
+    case fetchStoryByIdFailed(Error)
+    case likeStoryFailed(Error)
+    case searchStoriesFailed(Error)
+}
+
 class StoryRepository {
     let storiesDataSource = StoriesApiDataSource()
     
@@ -15,7 +23,8 @@ class StoryRepository {
             let storiesData = try await storiesDataSource.getAllStories()
             return storiesData.map(StoryMapper.map)
         } catch {
-            fatalError("Error fetching stories: \(error)")
+            print("❌ Error fetching all stories: \(error.localizedDescription)")
+            throw StoryRepositoryError.fetchAllStoriesFailed(error)
         }
     }
     
@@ -24,7 +33,8 @@ class StoryRepository {
             let storiesData = try await storiesDataSource.getLatestStories()
             return storiesData.map(StoryMapper.map)
         } catch {
-            fatalError("Error fetching latest stories: \(error)")
+            print("❌ Error fetching latest stories: \(error.localizedDescription)")
+            throw StoryRepositoryError.fetchLatestStoriesFailed(error)
         }
     }
     
@@ -33,7 +43,8 @@ class StoryRepository {
             let storyData = try await storiesDataSource.getStoryById(id: id)
             return StoryMapper.map(storyDTO: storyData)
         } catch {
-            fatalError("Error fetching story by id: \(error)")
+            print("❌ Error fetching story by id \(id): \(error.localizedDescription)")
+            throw StoryRepositoryError.fetchStoryByIdFailed(error)
         }
     }
     
@@ -41,7 +52,18 @@ class StoryRepository {
         do {
             try await storiesDataSource.getStoryById(id: id)
         } catch {
-            fatalError("Error liking story: \(error)")
+            print("❌ Error liking story \(id): \(error.localizedDescription)")
+            throw StoryRepositoryError.likeStoryFailed(error)
+        }
+    }
+    
+    func searchStories(query: String, userToken: String) async throws -> [Story] {
+        do {
+            let storiesData = try await storiesDataSource.searchSuggestions(payload: query, token: userToken)
+            return storiesData.map(StoryMapper.map)
+        } catch {
+            print("❌ Error searching stories with query '\(query)': \(error.localizedDescription)")
+            throw StoryRepositoryError.searchStoriesFailed(error)
         }
     }
 }

@@ -47,7 +47,13 @@ struct ProfileView: View {
             Section(ProfileViewConstants.accountSectionTitle) {
                 Button {
                     Task {
-                        try await viewModel.logout()
+                        do {
+                            try await viewModel.logout()
+                            print("✅ Logout réussi depuis ProfileView")
+                        } catch {
+                            print("❌ Erreur logout depuis ProfileView: \(error.localizedDescription)")
+                            // L'erreur est déjà gérée dans AuthViewModel
+                        }
                     }
                 } label: {
                     SettingsRowView(imageName: "arrow.left.circle.fill", title: ProfileViewConstants.logoutActionTitle, tintColor: .red)

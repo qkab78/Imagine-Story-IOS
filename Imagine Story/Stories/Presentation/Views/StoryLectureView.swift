@@ -49,6 +49,20 @@ struct StoryLectureView: View {
         }
     }
     
+    private func canGoToPrevious() -> Bool {
+        return selectedChapter > -1 || showConclusion
+    }
+    
+    private func canGoToNext() -> Bool {
+        if selectedChapter == -1 {
+            return true
+        } else if showConclusion {
+            return false
+        } else {
+            return selectedChapter < viewModel.story!.numberOfChapters - 1 || !showConclusion
+        }
+    }
+    
     @ViewBuilder
     private func mainView(geometry: GeometryProxy) -> some View {
         ScrollView {
@@ -114,11 +128,10 @@ struct StoryLectureView: View {
                     // Contenu
                     if selectedChapter == -1 {
                         // Message d'invitation sur la couverture
-                        Text("Swipez pour commencer l'aventure")
+                        Text(viewModel.story!.synopsis)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.leading)
                     } else if showConclusion {
                         Text(viewModel.story!.conclusion)
                             .font(.subheadline)
@@ -142,51 +155,103 @@ struct StoryLectureView: View {
         }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
-                // Barre de progression
-                HStack {
-                    let totalPages = viewModel.story!.numberOfChapters + 2 // +1 couverture +1 conclusion
-                    let currentPage = selectedChapter + (showConclusion ? 2 : 1) + 1 // +1 pour index, +1 pour couverture
+                // Texte de statut et barre de progression
+                VStack(alignment: .leading, spacing: 4) {
+                    // Texte du statut à gauche
+                    HStack {
+                        if selectedChapter == -1 {
+                            Text("Couverture")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if showConclusion {
+                            Text("Conclusion")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Page \(selectedChapter + 1) sur \(viewModel.story!.numberOfChapters)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        if selectedChapter == -1 {
+                            Text("\(viewModel.story!.numberOfChapters) chapitres")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if !showConclusion && selectedChapter >= 0 {
+                            let pagesRestantes = viewModel.story!.numberOfChapters - selectedChapter - 1
+                            if pagesRestantes > 0 {
+                                Text("page suivante")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Conclusion")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
                     
-                    Rectangle()
-                        .fill(greenLinearGradientBackground)
-                        .frame(width: CGFloat(currentPage) / CGFloat(totalPages) * (geometry.size.width - 40), height: 3)
-                    
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 3)
+                    // Barre de progression
+                    HStack {
+                        let totalPages = viewModel.story!.numberOfChapters + 2 // +1 couverture +1 conclusion
+                        let currentPage = selectedChapter + (showConclusion ? 2 : 1) + 1 // +1 pour index, +1 pour couverture
+                        
+                        Rectangle()
+                            .fill(greenLinearGradientBackground)
+                            .frame(width: CGFloat(currentPage) / CGFloat(totalPages) * (geometry.size.width - 40), height: 3)
+                        
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 3)
+                    }
                 }
                 .padding(.horizontal, 20)
                 
+                // Navigation avec flèches
                 HStack {
+                    // Flèche précédente
+                    Button(action: {
+                        if showConclusion {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showConclusion = false
+                            }
+                        } else if selectedChapter > -1 {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedChapter -= 1
+                            }
+                        }
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title2)
+                            .foregroundColor(canGoToPrevious() ? greenLinearGradientBackground : .gray.opacity(0.5))
+                    }
+                    .disabled(!canGoToPrevious())
+                    
                     Spacer()
                     
-                    if selectedChapter == -1 {
-                        Text("Couverture")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else if showConclusion {
-                        Text("Conclusion")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Chapitre \(selectedChapter + 1) sur \(viewModel.story!.numberOfChapters)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    // Flèche suivante
+                    Button(action: {
+                        if selectedChapter == -1 {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedChapter = 0
+                            }
+                        } else if selectedChapter < viewModel.story!.numberOfChapters - 1 {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedChapter += 1
+                            }
+                        } else if selectedChapter == viewModel.story!.numberOfChapters - 1 && !showConclusion {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showConclusion = true
+                            }
+                        }
+                    }) {
+                        Image(systemName: "chevron.right")
+                            .font(.title2)
+                            .foregroundColor(canGoToNext() ? greenLinearGradientBackground : .gray.opacity(0.5))
                     }
-                    
-                    Spacer()
-                    
-                    if selectedChapter == -1 {
-                        Text("\(viewModel.story!.numberOfChapters) chapitres")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else if !showConclusion && selectedChapter >= 0 {
-                        Text("\(viewModel.story!.numberOfChapters - selectedChapter) pages restantes")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Spacer()
-                    }
+                    .disabled(!canGoToNext())
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 10)
