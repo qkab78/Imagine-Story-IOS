@@ -16,23 +16,50 @@ struct StoryReadView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Chargement...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(ViewLinearGradientBackground)
+                VStack {
+                    ProgressView("Chargement...")
+                    Text("Chargement de l'histoire \(storyId ?? "ID manquant")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(ViewLinearGradientBackground)
             } else if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(ViewLinearGradientBackground)
+                VStack {
+                    Text("Erreur de chargement")
+                        .font(.headline)
+                        .padding(.bottom, 8)
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                    Text("ID de l'histoire: \(storyId ?? "Non défini")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 8)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(ViewLinearGradientBackground)
             } else if let story = viewModel.story {
                 AppleBooksStyleView(story: story, viewModel: viewModel)
+            } else {
+                VStack {
+                    Text("État inattendu")
+                        .font(.headline)
+                    Text("Loading: \(viewModel.isLoading ? "true" : "false")")
+                    Text("Story: \(viewModel.story?.title ?? "nil")")
+                    Text("Error: \(viewModel.errorMessage ?? "nil")")
+                    Text("StoryId: \(storyId ?? "nil")")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(ViewLinearGradientBackground)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("") // Titre vide mais garde la navigation
         .task {
+            print("🔍 StoryReadView - Loading story with ID: \(storyId ?? "nil")")
             await viewModel.loadStory(id: storyId ?? "1ed3df18-0bc3-4a08-aa6b-d5eb20e0dbc0")
         }
     }
