@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var viewModel: AuthViewModel
     @SceneStorage("selectedTab") var selectedTab: Int = 0
+    @State private var searchText = ""
 
     var body: some View {
         if viewModel.user == nil {
@@ -17,22 +18,29 @@ struct ContentView: View {
         } else {
             TabView(selection: $selectedTab) {
                 Tab("Home", systemImage: "house", value: 0) {
-                    HomeView()
+                    NavigationStack {
+                        HomeView()
+                    }
                 }
                 Tab("Library", systemImage: "book.pages", value: 1) {
-                    StorySearchView()
+                    NavigationStack {
+                        StorySearchView(searchText: $searchText)
+                            .searchable(text: $searchText, prompt: "Rechercher une histoire...")
+                            .searchToolbarBehavior(.minimize)
+                    }
                 }
                 
                 Tab("Store", systemImage: "storefront", value: 3) {
-                    StorySearchView()
+                    NavigationStack {
+                        StorySearchView(searchText: $searchText)
+                            .searchable(text: $searchText, prompt: "Rechercher dans le store...")
+                            .searchToolbarBehavior(.minimize)
+                    }
                 }
                 
                 Tab("Profile", systemImage: "gear", value: 4) {
-                    ProfileView()
-                }
-                if selectedTab == 1 || selectedTab == 3 {
-                    Tab("Search", systemImage: "magnifyingglass", value: 3, role: .search) {
-                        SearchView()
+                    NavigationStack {
+                        ProfileView()
                     }
                 }
             }
@@ -104,7 +112,7 @@ struct HeroSectionView: View {
                     }
                     
                     NavigationLink {
-                        StorySearchView()
+                        StorySearchViewWrapper()
                     } label: {
                         HStack() {
                             Text("📖")
@@ -178,6 +186,18 @@ struct HeaderView: View {
         }
         .padding(.top, 80)
         .padding(.horizontal, 24)
+    }
+}
+
+struct StorySearchViewWrapper: View {
+    @State private var localSearchText = ""
+    
+    var body: some View {
+        NavigationStack {
+            StorySearchView(searchText: $localSearchText)
+                .searchable(text: $localSearchText, prompt: "Rechercher une histoire...")
+                .searchToolbarBehavior(.minimize)
+        }
     }
 }
 
