@@ -155,7 +155,6 @@ struct StorySearchView: View {
                     .font(.title2)
                     .fontWeight(.semibold)
                     .padding(.top)
-                    .glassEffect(.regular.tint(.blue.opacity(0.1)), in: .rect(cornerRadius: 12))
                 
                 // Suggestions de recherche avec Liquid Glass
                 if searchText.isEmpty {
@@ -217,25 +216,36 @@ struct StorySearchView: View {
     
     // Vue sans résultats avec Liquid Glass
     private var noResultsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-                .glassEffect(.regular.tint(.orange.opacity(0.2)), in: .circle)
+        VStack(spacing: 0) {
+            Spacer()
             
-            VStack(spacing: 8) {
-                Text("Aucun résultat")
-                    .font(.title2)
-                    .fontWeight(.medium)
-                
-                Text("Essayez de modifier votre recherche")
-                    .font(.callout)
+            VStack(spacing: 24) {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 60))
                     .foregroundColor(.secondary)
+                    .glassEffect(.regular.tint(.orange.opacity(0.2)), in: .circle)
+                
+                VStack(spacing: 12) {
+                    Text("Aucun résultat")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                    
+                    Text("Essayez de modifier votre recherche")
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .glassEffect(.regular.tint(.gray.opacity(0.1)), in: .rect(cornerRadius: 12))
             }
-            .glassEffect(.regular.tint(.gray.opacity(0.1)), in: .rect(cornerRadius: 12))
+            .padding(.horizontal, 40) // Padding horizontal plus marqué
+            .padding(.vertical, 80)   // Padding vertical plus important
+            .background(Color.clear)  // Pour debugging - peut être retiré
+            
+            Spacer()
         }
-        .padding(.horizontal)
-        .padding(.top, 60)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 300)      // Hauteur minimum pour s'assurer que la vue a de l'espace
+        .padding(.horizontal, 20)
     }
     
     // Vue des résultats de recherche avec Liquid Glass
