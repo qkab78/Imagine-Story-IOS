@@ -80,4 +80,23 @@ class StoriesApiDataSource {
         // @todo: Implement like method in the API
         return
     }
+    
+    func searchSuggestions(payload: String) async throws -> [StoryDTO] {
+        let endpoint = "http://localhost:3333/stories/search/suggestions?q=\(payload)"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            return try JSONDecoder().decode([StoryDTO].self, from: data)
+        } catch {
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
+    }
 }

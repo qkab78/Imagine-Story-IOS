@@ -151,10 +151,6 @@ struct StorySearchView: View {
         VStack(spacing: 24) {
             // Header de recherche avec Liquid Glass
             VStack(spacing: 16) {
-                Text("Rechercher une Histoire")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .padding(.top)
                 
                 // Suggestions de recherche avec Liquid Glass
                 if searchText.isEmpty {
