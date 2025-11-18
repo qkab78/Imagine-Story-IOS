@@ -32,9 +32,7 @@ struct ContentView: View {
                 }
                 if selectedTab == 1 || selectedTab == 3 {
                     Tab("Search", systemImage: "magnifyingglass", value: 3, role: .search) {
-                        Button("Label") {
-                            
-                        }.buttonStyle(.glass)
+                        SearchView()
                     }
                 }
             }
