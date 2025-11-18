@@ -135,6 +135,12 @@ class StorySearchViewModel: ObservableObject {
         await searchStories(query: query, userToken: userToken)
     }
     
+    func clearRecentSearches() {
+        recentSearches = []
+        UserDefaults.standard.removeObject(forKey: "RecentSearches")
+        print("✅ StorySearchViewModel - Recent searches cleared")
+    }
+    
     // MARK: - Private Methods
     private func organizeStoriesByTheme(_ stories: [Story]) -> [StorySection] {
         // Grouper les histoires par thème

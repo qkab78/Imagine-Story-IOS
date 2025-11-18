@@ -125,11 +125,23 @@ struct StorySearchView: View {
                     .fontWeight(.semibold)
                 
                 Spacer()
+                
+                // Bouton pour effacer les recherches récentes
+                if !viewModel.recentSearches.isEmpty {
+                    Button("Effacer") {
+                        viewModel.clearRecentSearches()
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .glassEffect(.regular.tint(.red.opacity(0.1)), in: .rect(cornerRadius: 8))
+                }
             }
             
             LazyVStack(alignment: .leading, spacing: 12) {
                 let suggestions = viewModel.recentSearches.isEmpty ? 
-                    ["Aventure", "Romance", "Mystère", "Fantaisie"] : 
+                    ["Aventure", "Famille", "Mystère", "Fantaisie"] : 
                     viewModel.recentSearches
                 
                 ForEach(suggestions, id: \.self) { suggestion in
@@ -320,16 +332,24 @@ struct StorySearchView: View {
                 
                 Spacer()
                 
-                // Indicateur visuel de navigation
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.trailing, 8)
+                // Bouton LIRE avec effet glass
+                Button {
+                    // Action pour lire l'histoire
+                } label: {
+                    Text("LIRE")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.glass)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-            .contentShape(Rectangle()) // Force toute la zone à être cliquable
         }
         .buttonStyle(PlainButtonStyle())
     }
