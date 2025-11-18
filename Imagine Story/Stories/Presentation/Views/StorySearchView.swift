@@ -251,53 +251,31 @@ struct StorySearchView: View {
     private func searchResultRow(story: Story) -> some View {
         NavigationLink(destination: StoryReadView(storyId: story.id)) {
             HStack(spacing: 12) {
-                // Couverture avec image réelle ou placeholder
-                Group {
-                    if !story.coverImage.isEmpty {
-                        AsyncImage(url: URL(string: story.coverImage)) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            // Placeholder pendant le chargement
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .overlay {
-                                    VStack {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.8)
-                                    }
-                                }
-                        }
-                    } else {
-                        // Placeholder quand il n'y a pas d'image
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(
-                                LinearGradient(
-                                    colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                // Couverture avec image réelle
+                AsyncImage(url: URL(string: story.coverImage)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
                             )
-                            .overlay {
-                                VStack {
-                                    Image(systemName: "book.closed")
-                                        .font(.system(size: 16))
-                                        .foregroundColor(.white)
-                                    Text(story.title.prefix(1))
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                }
+                        )
+                        .overlay {
+                            VStack {
+                                Image(systemName: "book.closed")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+                                Text(story.title.prefix(1))
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
                             }
-                    }
+                        }
                 }
                 .frame(width: 60, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -337,20 +315,11 @@ struct StorySearchView: View {
                 
                 Spacer()
                 
-                // Bouton LIRE avec effet glass
-                Button {
-                    // Action pour lire l'histoire
-                } label: {
-                    Text("LIRE")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.blue)
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.glass)
+                // Indicateur visuel de navigation
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.trailing, 8)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
