@@ -168,7 +168,7 @@ struct StoryLectureView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
-                            Text("Chapitre \(selectedChapter + 1) sur \(viewModel.story!.numberOfChapters)")
+                            Text("Page \(selectedChapter + 1) sur \(viewModel.story!.numberOfChapters)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -180,9 +180,16 @@ struct StoryLectureView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         } else if !showConclusion && selectedChapter >= 0 {
-                            Text("\(viewModel.story!.numberOfChapters - selectedChapter - 1) pages restantes")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            let pagesRestantes = viewModel.story!.numberOfChapters - selectedChapter - 1
+                            if pagesRestantes > 0 {
+                                Text("page suivante")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Conclusion")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     
