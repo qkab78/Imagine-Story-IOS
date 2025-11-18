@@ -10,7 +10,7 @@ import Foundation
 class LogoutUserUseCase {
     let userRepository = UserRepository()
     
-    func execute() async throws -> Void {
-        return try await userRepository.logout()
+    func execute(token: String) async throws -> Void {
+        return try await userRepository.logout(token: token)
     }
 }

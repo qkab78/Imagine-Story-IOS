@@ -103,7 +103,7 @@ class UserAPIDataSource {
         }
     }
     
-    func logout() async throws -> Void {
+    func logout(token: String) async throws -> Void {
         let endpoint = "http://localhost:3333/auth/logout"
         
         guard let url = URL(string: endpoint) else {
@@ -112,10 +112,22 @@ class UserAPIDataSource {
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
+        urlRequest.setValue(token, forHTTPHeaderField: "Authorization")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Debug: Afficher le token et les headers
+        print("🔐 Logout - Token envoyé: \(token)")
+        print("📤 Headers: \(urlRequest.allHTTPHeaderFields ?? [:])")
         
         let (_, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        print("📥 Response status: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 204 else {
+            print("❌ Logout failed - Status code: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
             throw UserAPIDataSourceError.invalidResponse
         }
+        
+        print("✅ Logout successful")
     }
 }

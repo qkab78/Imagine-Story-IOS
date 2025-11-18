@@ -42,9 +42,9 @@ class UserRepository {
         }
     }
     
-    func logout() async throws -> Void {
+    func logout(token: String) async throws -> Void {
         do {
-            try await userDataSource.logout()
+            try await userDataSource.logout(token: token)
         } catch {
             print(error.localizedDescription)
             throw error

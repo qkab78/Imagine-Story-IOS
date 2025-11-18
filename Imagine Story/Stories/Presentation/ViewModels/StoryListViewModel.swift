@@ -22,10 +22,27 @@ class StoryListViewModel: ObservableObject {
         do {
             let result = try await getAllStoriesUseCase.execute()
             stories = result
+            print("✅ Successfully loaded \(result.count) stories")
         } catch {
-            errorMessage = "Une erreur est survenue lors du chargement des histoires : \(error.localizedDescription)"
+            if let storyError = error as? StoryRepositoryError {
+                switch storyError {
+                case .fetchAllStoriesFailed(let underlyingError):
+                    print("❌ StoryListViewModel - Failed to fetch all stories: \(underlyingError.localizedDescription)")
+                    errorMessage = "Impossible de charger les histoires. Vérifiez votre connexion internet."
+                default:
+                    print("❌ StoryListViewModel - Unexpected story repository error: \(storyError)")
+                    errorMessage = "Une erreur inattendue s'est produite."
+                }
+            } else {
+                print("❌ StoryListViewModel - Unknown error: \(error.localizedDescription)")
+                errorMessage = "Une erreur est survenue lors du chargement des histoires."
+            }
         }
         
         isLoading = false
+    }
+    
+    func retryLoadStories() async {
+        await loadStories()
     }
 }

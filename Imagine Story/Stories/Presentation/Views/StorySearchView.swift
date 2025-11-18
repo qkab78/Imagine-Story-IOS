@@ -17,86 +17,9 @@ struct StorySection: Identifiable {
 struct StorySearchView: View {
     @StateObject private var viewModel = StorySearchViewModel()
     @Environment(\.isSearching) private var isSearching
+    @EnvironmentObject var authViewModel: AuthViewModel
     @Binding var searchText: String
     
-    // Données d'exemple pour les résultats de recherche
-    private let sampleStories = [
-        Story(
-            id: "1", 
-            title: "Pride and Prejudice", 
-            synopsis: "Une histoire d'amour et de fierté dans l'Angleterre du 19ème siècle",
-            coverImage: "",
-            numberOfChapters: 12,
-            tone: "romantique",
-            theme: "romance",
-            themeName: "Romance",
-            themeDescription: "Histoire d'amour",
-            conclusion: "Un mariage heureux",
-            chapters: [],
-            chapterImages: [],
-            createdAt: "2023-01-01",
-            isLiked: false
-        ),
-        Story(
-            id: "2", 
-            title: "The Great Adventure", 
-            synopsis: "Une aventure épique à travers des terres mystérieuses",
-            coverImage: "",
-            numberOfChapters: 8,
-            tone: "aventureux",
-            theme: "adventure",
-            themeName: "Aventure",
-            themeDescription: "Histoire d'aventure",
-            conclusion: "Le héros triomphe",
-            chapters: [],
-            chapterImages: [],
-            createdAt: "2023-02-01",
-            isLiked: true
-        ),
-        Story(
-            id: "3", 
-            title: "Magical Journey", 
-            synopsis: "Un voyage magique dans un monde fantastique",
-            coverImage: "",
-            numberOfChapters: 15,
-            tone: "magique",
-            theme: "fantasy",
-            themeName: "Fantaisie",
-            themeDescription: "Histoire fantastique",
-            conclusion: "La magie sauve le monde",
-            chapters: [],
-            chapterImages: [],
-            createdAt: "2023-03-01",
-            isLiked: false
-        ),
-        Story(
-            id: "4", 
-            title: "Ocean's Mystery", 
-            synopsis: "Un mystère sous les océans profonds",
-            coverImage: "",
-            numberOfChapters: 10,
-            tone: "mystérieux",
-            theme: "mystery",
-            themeName: "Mystère",
-            themeDescription: "Histoire mystérieuse",
-            conclusion: "Le mystère est résolu",
-            chapters: [],
-            chapterImages: [],
-            createdAt: "2023-04-01",
-            isLiked: true
-        )
-    ]
-    
-    var filteredStories: [Story] {
-        if searchText.isEmpty {
-            return []
-        }
-        return sampleStories.filter { story in
-            story.title.lowercased().contains(searchText.lowercased()) ||
-            story.synopsis.lowercased().contains(searchText.lowercased()) ||
-            story.themeName.lowercased().contains(searchText.lowercased())
-        }
-    }
     
     var body: some View {
         ScrollView {
@@ -142,6 +65,18 @@ struct StorySearchView: View {
         .task {
             await viewModel.loadStories()
         }
+        .onChange(of: searchText) { oldValue, newValue in
+            if !newValue.isEmpty {
+                Task {
+                    await viewModel.searchStories(query: newValue, userToken: authViewModel.user?.token ?? "")
+                }
+            } else {
+                viewModel.clearSearchResults()
+            }
+        }
+        .onDisappear {
+            viewModel.clearSearchResults()
+        }
     }
     
     // MARK: - View Components
@@ -161,8 +96,11 @@ struct StorySearchView: View {
             
             // Résultats de recherche
             if !searchText.isEmpty {
-                if filteredStories.isEmpty {
+                if viewModel.searchResults.isEmpty && !viewModel.isSearching && viewModel.searchErrorMessage == nil {
                     // État sans résultat avec Liquid Glass
+                    noResultsView
+                } else if viewModel.isSearching || viewModel.searchErrorMessage != nil {
+                    // État de chargement ou d'erreur
                     noResultsView
                 } else {
                     // Résultats avec Liquid Glass
@@ -177,7 +115,7 @@ struct StorySearchView: View {
     private var recentSearchesView: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Recherches Populaires")
+                Text(viewModel.recentSearches.isEmpty ? "Recherches Populaires" : "Recherches Récentes")
                     .font(.headline)
                     .fontWeight(.semibold)
                 
@@ -185,12 +123,19 @@ struct StorySearchView: View {
             }
             
             LazyVStack(alignment: .leading, spacing: 12) {
-                ForEach(["Aventure", "Romance", "Mystère", "Fantaisie"], id: \.self) { suggestion in
+                let suggestions = viewModel.recentSearches.isEmpty ? 
+                    ["Aventure", "Romance", "Mystère", "Fantaisie"] : 
+                    viewModel.recentSearches
+                
+                ForEach(suggestions, id: \.self) { suggestion in
                     Button {
                         searchText = suggestion
+                        Task {
+                            await viewModel.selectRecentSearch(suggestion, userToken: authViewModel.user?.token ?? "")
+                        }
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "magnifyingglass")
+                            Image(systemName: viewModel.recentSearches.isEmpty ? "magnifyingglass" : "clock")
                                 .foregroundColor(.secondary)
                                 .font(.system(size: 14))
                             
@@ -215,39 +160,87 @@ struct StorySearchView: View {
         VStack(spacing: 0) {
             Spacer()
             
-            VStack(spacing: 24) {
-                Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: 60))
-                    .foregroundColor(.secondary)
-                    .glassEffect(.regular.tint(.orange.opacity(0.2)), in: .circle)
-                
-                VStack(spacing: 12) {
-                    Text("Aucun résultat")
-                        .font(.title2)
-                        .fontWeight(.medium)
+            if viewModel.isSearching {
+                // État de chargement
+                VStack(spacing: 24) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .glassEffect(.regular.tint(.blue.opacity(0.2)), in: .circle)
                     
-                    Text("Essayez de modifier votre recherche")
+                    Text("Recherche en cours...")
                         .font(.callout)
                         .foregroundColor(.secondary)
+                        .glassEffect(.regular.tint(.gray.opacity(0.1)), in: .rect(cornerRadius: 8))
                 }
-                .padding()
-                .glassEffect(.regular.tint(.gray.opacity(0.1)), in: .rect(cornerRadius: 12))
+                .padding(.horizontal, 40)
+                .padding(.vertical, 80)
+                
+            } else if let errorMessage = viewModel.searchErrorMessage {
+                // État d'erreur
+                VStack(spacing: 24) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 50))
+                        .foregroundColor(.orange)
+                        .glassEffect(.regular.tint(.orange.opacity(0.2)), in: .circle)
+                    
+                    VStack(spacing: 12) {
+                        Text("Erreur de recherche")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                        
+                        Text(errorMessage)
+                            .font(.callout)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                    .glassEffect(.regular.tint(.red.opacity(0.1)), in: .rect(cornerRadius: 12))
+                    
+                    Button("Réessayer") {
+                        Task {
+                            await viewModel.searchStories(query: searchText, userToken: authViewModel.user?.token ?? "")
+                        }
+                    }
+                    .buttonStyle(.glass)
+                }
+                .padding(.horizontal, 40)
+                .padding(.vertical, 80)
+                
+            } else {
+                // Aucun résultat
+                VStack(spacing: 24) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 60))
+                        .foregroundColor(.secondary)
+                        .glassEffect(.regular.tint(.orange.opacity(0.2)), in: .circle)
+                    
+                    VStack(spacing: 12) {
+                        Text("Aucun résultat")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                        
+                        Text("Essayez de modifier votre recherche")
+                            .font(.callout)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .glassEffect(.regular.tint(.gray.opacity(0.1)), in: .rect(cornerRadius: 12))
+                }
+                .padding(.horizontal, 40)
+                .padding(.vertical, 80)
             }
-            .padding(.horizontal, 40) // Padding horizontal plus marqué
-            .padding(.vertical, 80)   // Padding vertical plus important
-            .background(Color.clear)  // Pour debugging - peut être retiré
             
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 300)      // Hauteur minimum pour s'assurer que la vue a de l'espace
+        .frame(minHeight: 300)
         .padding(.horizontal, 20)
     }
     
     // Vue des résultats de recherche avec Liquid Glass
     private var searchResultsView: some View {
         LazyVStack(spacing: 16) {
-            ForEach(filteredStories) { story in
+            ForEach(viewModel.searchResults) { story in
                 searchResultRow(story: story)
             }
         }
@@ -258,23 +251,57 @@ struct StorySearchView: View {
     private func searchResultRow(story: Story) -> some View {
         NavigationLink(destination: StoryReadView(storyId: story.id)) {
             HStack(spacing: 12) {
-                // Couverture avec effet glass
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        LinearGradient(
-                            colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 60, height: 80)
-                    .overlay {
-                        Text(story.title.prefix(1))
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
+                // Couverture avec image réelle ou placeholder
+                Group {
+                    if !story.coverImage.isEmpty {
+                        AsyncImage(url: URL(string: story.coverImage)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            // Placeholder pendant le chargement
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .overlay {
+                                    VStack {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .scaleEffect(0.8)
+                                    }
+                                }
+                        }
+                    } else {
+                        // Placeholder quand il n'y a pas d'image
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                LinearGradient(
+                                    colors: [coverColor(for: story.theme), coverColor(for: story.theme).opacity(0.7)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay {
+                                VStack {
+                                    Image(systemName: "book.closed")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.white)
+                                    Text(story.title.prefix(1))
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
+                            }
                     }
-                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
+                }
+                .frame(width: 60, height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
                 
                 // Informations avec effet glass
                 VStack(alignment: .leading, spacing: 4) {

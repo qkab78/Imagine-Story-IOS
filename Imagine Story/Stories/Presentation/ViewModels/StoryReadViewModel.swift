@@ -22,24 +22,38 @@ class StoryReadViewModel: ObservableObject {
         do {
             let result = try await getStoryByIdUseCase.execute(id: id)
             story = result
-            print(story)
+            print("✅ StoryReadViewModel - Successfully loaded story: \(result.title)")
         } catch {
-            errorMessage = "Une erreur est survenue lors du chargement des histoires : \(error.localizedDescription)"
+            if let storyError = error as? StoryRepositoryError {
+                switch storyError {
+                case .fetchStoryByIdFailed(let underlyingError):
+                    print("❌ StoryReadViewModel - Failed to fetch story \(id): \(underlyingError.localizedDescription)")
+                    errorMessage = "Impossible de charger cette histoire. Vérifiez votre connexion."
+                default:
+                    print("❌ StoryReadViewModel - Unexpected error loading story \(id): \(storyError)")
+                    errorMessage = "Une erreur inattendue s'est produite."
+                }
+            } else {
+                print("❌ StoryReadViewModel - Unknown error loading story \(id): \(error.localizedDescription)")
+                errorMessage = "Une erreur est survenue lors du chargement de l'histoire."
+            }
         }
         
         isLoading = false
     }
     
+    func retryLoadStory(id: String) async {
+        await loadStory(id: id)
+    }
+    
     func likeStory(id: String) async {
-        isLoading = true
-        errorMessage = nil
-        
+        // TODO: Implémenter la logique de like avec le repository
         do {
-            print("Story \(id) liked!")
+            // Ici vous devriez appeler un use case pour liker l'histoire
+            print("✅ Story \(id) liked!")
         } catch {
-            errorMessage = "Une erreur est survenue lors de l'ajout de l'histoire aux favoris : \(error.localizedDescription)"
+            print("❌ Error liking story \(id): \(error.localizedDescription)")
+            errorMessage = "Impossible d'ajouter cette histoire aux favoris."
         }
-        
-        isLoading = false
     }
 }
