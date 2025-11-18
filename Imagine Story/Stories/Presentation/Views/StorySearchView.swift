@@ -65,6 +65,14 @@ struct StorySearchView: View {
         .task {
             await viewModel.loadStories()
         }
+        .onAppear {
+            // Relancer la recherche si on a un texte de recherche mais pas de résultats
+            if !searchText.isEmpty && viewModel.searchResults.isEmpty && !viewModel.isSearching {
+                Task {
+                    await viewModel.searchStories(query: searchText, userToken: authViewModel.user?.token ?? "")
+                }
+            }
+        }
         .onChange(of: searchText) { oldValue, newValue in
             if !newValue.isEmpty {
                 Task {
@@ -73,9 +81,6 @@ struct StorySearchView: View {
             } else {
                 viewModel.clearSearchResults()
             }
-        }
-        .onDisappear {
-            viewModel.clearSearchResults()
         }
     }
     
@@ -324,6 +329,7 @@ struct StorySearchView: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+            .contentShape(Rectangle()) // Force toute la zone à être cliquable
         }
         .buttonStyle(PlainButtonStyle())
     }
