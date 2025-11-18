@@ -94,7 +94,7 @@ struct AppleBooksStyleView: View {
                                 .fontWeight(.bold)
                                 .multilineTextAlignment(.center)
                             
-                            Text(story.theme) // Utilisé comme sous-titre
+                            Text(story.themeName)
                                 .font(.title3)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -149,7 +149,7 @@ struct AppleBooksStyleView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             CategoryTag(text: story.tone, icon: "book.closed")
-                            CategoryTag(text: story.theme, icon: "moon")
+                            CategoryTag(text: story.themeName, icon: "moon")
                             CategoryTag(text: "\(story.numberOfChapters) chapitres", icon: "list.number")
                         }
                         .padding(.horizontal, 20)
