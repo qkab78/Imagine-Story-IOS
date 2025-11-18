@@ -14,25 +14,24 @@ struct StoryReadView: View {
     @Environment(\.dismiss) private var dismiss
     
     public var body: some View {
-        NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Chargement...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(ViewLinearGradientBackground)
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(ViewLinearGradientBackground)
-                } else if let story = viewModel.story {
-                    AppleBooksStyleView(story: story, viewModel: viewModel)
-                }
+        Group {
+            if viewModel.isLoading {
+                ProgressView("Chargement...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ViewLinearGradientBackground)
+            } else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ViewLinearGradientBackground)
+            } else if let story = viewModel.story {
+                AppleBooksStyleView(story: story, viewModel: viewModel)
             }
         }
-        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("") // Titre vide mais garde la navigation
         .task {
             await viewModel.loadStory(id: storyId ?? "1ed3df18-0bc3-4a08-aa6b-d5eb20e0dbc0")
         }
