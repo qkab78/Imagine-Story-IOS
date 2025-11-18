@@ -19,11 +19,15 @@ struct ContentView: View {
                 Tab("Home", systemImage: "house", value: 0) {
                     HomeView()
                 }
-                Tab("Stories", systemImage: "book.pages", value: 1) {
+                Tab("Library", systemImage: "book.pages", value: 1) {
                     StorySearchView()
                 }
                 
-                Tab("Profile", systemImage: "gear", value: 2) {
+                Tab("Store", systemImage: "storefront", value: 3) {
+                    StorySearchView()
+                }
+                
+                Tab("Profile", systemImage: "gear", value: 4) {
                     ProfileView()
                 }
                 if selectedTab == 1 || selectedTab == 3 {

@@ -26,6 +26,8 @@ class StoryMapper {
             numberOfChapters: storyDTO.numberOfChapters,
             tone: storyDTO.tone,
             theme: storyDTO.theme,
+            themeName: storyDTO.themeName,
+            themeDescription: storyDTO.themeDescription,
 //            userId: storyDTO.userId,
 //            slug: storyDTO.slug,
             conclusion: storyDTO.conclusion,
