@@ -20,7 +20,6 @@ struct SearchView: View {
             synopsis: "Une histoire d'amour et de fierté dans l'Angleterre du 19ème siècle",
             coverImage: "",
             numberOfChapters: 12,
-            tone: "romantique",
             theme: "romance",
             themeName: "Romance",
             themeDescription: "Histoire d'amour",
@@ -28,7 +27,10 @@ struct SearchView: View {
             chapters: [],
             chapterImages: [],
             createdAt: "2023-01-01",
-            isLiked: false
+            isLiked: false,
+            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            tone: StoryTone(id: "1", name: "calm", description: "test")
+            
         ),
         Story(
             id: "2", 
@@ -36,7 +38,6 @@ struct SearchView: View {
             synopsis: "Une aventure épique à travers des terres mystérieuses",
             coverImage: "",
             numberOfChapters: 8,
-            tone: "aventureux",
             theme: "adventure",
             themeName: "Aventure",
             themeDescription: "Histoire d'aventure",
@@ -44,7 +45,9 @@ struct SearchView: View {
             chapters: [],
             chapterImages: [],
             createdAt: "2023-02-01",
-            isLiked: true
+            isLiked: true,
+            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
             id: "3", 
@@ -52,7 +55,6 @@ struct SearchView: View {
             synopsis: "Un voyage magique dans un monde fantastique",
             coverImage: "",
             numberOfChapters: 15,
-            tone: "magique",
             theme: "fantasy",
             themeName: "Fantaisie",
             themeDescription: "Histoire fantastique",
@@ -60,7 +62,9 @@ struct SearchView: View {
             chapters: [],
             chapterImages: [],
             createdAt: "2023-03-01",
-            isLiked: false
+            isLiked: false,
+            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
             id: "4", 
@@ -68,7 +72,6 @@ struct SearchView: View {
             synopsis: "Un mystère sous les océans profonds",
             coverImage: "",
             numberOfChapters: 10,
-            tone: "mystérieux",
             theme: "mystery",
             themeName: "Mystère",
             themeDescription: "Histoire mystérieuse",
@@ -76,7 +79,9 @@ struct SearchView: View {
             chapters: [],
             chapterImages: [],
             createdAt: "2023-04-01",
-            isLiked: true
+            isLiked: true,
+            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
             id: "5", 
@@ -84,7 +89,6 @@ struct SearchView: View {
             synopsis: "Une quête périlleuse dans les montagnes",
             coverImage: "",
             numberOfChapters: 7,
-            tone: "épique",
             theme: "quest",
             themeName: "Quête",
             themeDescription: "Histoire de quête",
@@ -92,7 +96,9 @@ struct SearchView: View {
             chapters: [],
             chapterImages: [],
             createdAt: "2023-05-01",
-            isLiked: false
+            isLiked: false,
+            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            tone: StoryTone(id: "1", name: "calm", description: "test")
         )
     ]
     

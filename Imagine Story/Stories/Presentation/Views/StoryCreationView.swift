@@ -17,7 +17,7 @@ class StoryData: ObservableObject {
     @Published var targetAge: Int = 5
     @Published var chapterCount: Int = 5
     @Published var language: String = "Français"
-    @Published var tone: StoryTone?
+    @Published var tone: StoryToneMock?
     @Published var autoGenerateProfiles: Bool = true
     @Published var autoGenerateImages: Bool = true
     @Published var isPublic: Bool = false
@@ -59,7 +59,7 @@ enum StoryTheme: String, CaseIterable {
     }
 }
 
-enum StoryTone: String, CaseIterable {
+enum StoryToneMock: String, CaseIterable {
     case joyful = "Joyeux"
     case adventurous = "Aventureux"
     case mysterious = "Mystérieux"
@@ -583,7 +583,7 @@ struct AgeSliderView: View {
 }
 
 struct TonePickerView: View {
-    @Binding var selectedTone: StoryTone?
+    @Binding var selectedTone: StoryToneMock?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -599,7 +599,7 @@ struct TonePickerView: View {
             }
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
-                ForEach(StoryTone.allCases, id: \.self) { tone in
+                ForEach(StoryToneMock.allCases, id: \.self) { tone in
                     Button(action: {
                         selectedTone = tone
                     }) {
