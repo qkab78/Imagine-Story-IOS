@@ -53,6 +53,9 @@ class StoriesApiDataSource {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue(token, forHTTPHeaderField: "Authorization")
         
+        // Timeout étendu pour la génération d'histoire (5 minutes)
+        urlRequest.timeoutInterval = 300
+        
         do {
             urlRequest.httpBody = try JSONEncoder().encode(request)
         } catch {
@@ -61,8 +64,15 @@ class StoriesApiDataSource {
         
         print("🔐 Create Story - Token envoyé: \(token)")
         print("📤 Request body: \(String(data: urlRequest.httpBody ?? Data(), encoding: .utf8) ?? "")")
+        print("⏱️ Timeout configuré: \(urlRequest.timeoutInterval) secondes")
         
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        // Configuration de session avec timeout étendu
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 300  // 5 minutes pour la requête
+        configuration.timeoutIntervalForResource = 600 // 10 minutes pour la ressource complète
+        let session = URLSession(configuration: configuration)
+        
+        let (data, response) = try await session.data(for: urlRequest)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw StoriesAPIDataSourceError.invalidResponse
