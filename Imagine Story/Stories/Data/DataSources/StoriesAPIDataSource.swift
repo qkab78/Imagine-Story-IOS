@@ -39,6 +39,12 @@ struct CreateStoryResponseDTO: Codable {
     let slug: String
 }
 
+// MARK: - API Response Wrapper
+struct CreateStoryAPIResponse: Codable {
+    let message: String
+    let data: CreateStoryResponseDTO
+}
+
 class StoriesApiDataSource {
     
     // MARK: - Create Story
@@ -89,9 +95,9 @@ class StoriesApiDataSource {
         }
         
         do {
-            let responseDTO = try JSONDecoder().decode(CreateStoryResponseDTO.self, from: data)
-            print("✅ Story created successfully with ID: \(responseDTO.id)")
-            return responseDTO
+            let apiResponse = try JSONDecoder().decode(CreateStoryAPIResponse.self, from: data)
+            print("✅ Story created successfully with ID: \(apiResponse.data.id)")
+            return apiResponse.data
         } catch {
             print("❌ Decoding error: \(error)")
             if let jsonString = String(data: data, encoding: .utf8) {
