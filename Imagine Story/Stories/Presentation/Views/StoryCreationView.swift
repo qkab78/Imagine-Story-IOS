@@ -38,13 +38,20 @@ class StoryData: ObservableObject {
 
 // MARK: - Main View
 struct StoryCreationView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var storyData = StoryData()
     @StateObject private var viewModel = StoryCreationViewModel()
     @State private var currentStep = 1
     @State private var isAnimating = false
     @State private var showProcessingView = false
     @State private var showSuccessView = false
+    @State private var createdStoryId: String?
+    @State private var navigateToStory = false
     private let totalSteps = 5
+    
+    private var userToken: String {
+        authViewModel.user?.token ?? ""
+    }
     
     var body: some View {
         NavigationStack {
@@ -88,18 +95,33 @@ struct StoryCreationView: View {
                 ViewLinearGradientBackground
                     .edgesIgnoringSafeArea(.all)
             }
+            .navigationDestination(isPresented: $navigateToStory) {
+                if let storyId = createdStoryId {
+                    StoryReadView(storyId: storyId)
+                }
+            }
         }
         .fullScreenCover(isPresented: $showProcessingView) {
             StoryProcessingView(
                 storyData: storyData,
+                viewModel: viewModel,
+                userToken: userToken,
                 isPresented: $showProcessingView,
-                showSuccess: $showSuccessView
+                showSuccess: $showSuccessView,
+                createdStoryId: $createdStoryId
             )
         }
         .fullScreenCover(isPresented: $showSuccessView) {
             StorySuccessView(
                 storyData: storyData,
-                isPresented: $showSuccessView
+                isPresented: $showSuccessView,
+                createdStoryId: createdStoryId,
+                onReadStory: {
+                    showSuccessView = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        navigateToStory = true
+                    }
+                }
             )
         }
         .task {
@@ -1128,17 +1150,22 @@ struct NavigationButtonsView: View {
 // MARK: - Story Processing View (Klarna style)
 struct StoryProcessingView: View {
     @ObservedObject var storyData: StoryData
+    @ObservedObject var viewModel: StoryCreationViewModel
+    let userToken: String
     @Binding var isPresented: Bool
     @Binding var showSuccess: Bool
+    @Binding var createdStoryId: String?
     @State private var animationProgress: Double = 0
     @State private var currentStep = 0
     @State private var isCompleted = false
+    @State private var hasError = false
+    @State private var errorMessage: String?
     
     private let processingSteps = [
+        "Préparation de votre histoire...",
         "Création de l'univers...",
         "Développement des personnages...",
         "Écriture des chapitres...",
-        "Génération des illustrations...",
         "Finalisation de l'histoire..."
     ]
     
@@ -1158,8 +1185,8 @@ struct StoryProcessingView: View {
                             .fill(
                                 LinearGradient(
                                     colors: [
-                                        Color.pink.opacity(0.3),
-                                        Color.pink.opacity(0.1)
+                                        hasError ? Color.red.opacity(0.3) : Color.pink.opacity(0.3),
+                                        hasError ? Color.red.opacity(0.1) : Color.pink.opacity(0.1)
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -1168,7 +1195,11 @@ struct StoryProcessingView: View {
                             .frame(width: 120, height: 120)
                             .scaleEffect(1 + sin(animationProgress * 2) * 0.1)
                         
-                        if !isCompleted {
+                        if hasError {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 40, weight: .medium))
+                                .foregroundColor(.red)
+                        } else if !isCompleted {
                             Image(systemName: "wand.and.stars")
                                 .font(.system(size: 40, weight: .medium))
                                 .foregroundColor(.pink)
@@ -1183,27 +1214,65 @@ struct StoryProcessingView: View {
                     
                     // Texte principal
                     VStack(spacing: 12) {
-                        if !isCompleted {
+                        if hasError {
+                            Text("Une erreur est survenue")
+                                .font(.title2.weight(.semibold))
+                                .foregroundColor(.primary)
+                            
+                            if let error = errorMessage {
+                                Text(error)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
+                            }
+                        } else if !isCompleted {
                             Text("Création en cours...")
                                 .font(.title2.weight(.semibold))
                                 .foregroundColor(.primary)
+                            
+                            if currentStep < processingSteps.count {
+                                Text(processingSteps[currentStep])
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
+                            }
                         } else {
                             Text("Histoire créée !")
                                 .font(.title2.weight(.semibold))
                                 .foregroundColor(.primary)
                         }
-                        
-                        if currentStep < processingSteps.count {
-                            Text(processingSteps[currentStep])
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                        }
                     }
                     
-                    // Barre de progression
-                    if !isCompleted {
+                    // Barre de progression ou bouton réessayer
+                    if hasError {
+                        VStack(spacing: 16) {
+                            Button(action: {
+                                hasError = false
+                                errorMessage = nil
+                                currentStep = 0
+                                startCreationProcess()
+                            }) {
+                                Text("Réessayer")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.pink)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                            .padding(.horizontal, 60)
+                            
+                            Button(action: {
+                                isPresented = false
+                            }) {
+                                Text("Annuler")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    } else if !isCompleted {
                         VStack(spacing: 8) {
                             ProgressView(value: Double(currentStep), total: Double(processingSteps.count))
                                 .progressViewStyle(.linear)
@@ -1221,8 +1290,8 @@ struct StoryProcessingView: View {
                     Spacer()
                     
                     // Message d'encouragement (style Klarna)
-                    if !isCompleted {
-                        Text("Votre histoire unique est en cours de création.\nCela ne prendra qu'un instant...")
+                    if !isCompleted && !hasError {
+                        Text("Votre histoire unique est en cours de création.\nCela peut prendre quelques instants...")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -1235,36 +1304,56 @@ struct StoryProcessingView: View {
             }
         }
         .onAppear {
-            startProcessingAnimation()
+            startCreationProcess()
         }
     }
     
-    private func startProcessingAnimation() {
+    private func startCreationProcess() {
         // Animation continue de l'icône
         withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
             animationProgress = 1
         }
         
-        // Simulation des étapes de traitement
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
-            if currentStep < processingSteps.count - 1 {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    currentStep += 1
+        // Démarrer l'appel API
+        Task {
+            // Animation des étapes pendant l'appel
+            let stepTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { timer in
+                if currentStep < processingSteps.count - 1 && !isCompleted && !hasError {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        currentStep += 1
+                    }
                 }
-            } else {
-                timer.invalidate()
+            }
+            
+            // Appel API réel
+            let storyId = await viewModel.createStory(from: storyData, token: userToken)
+            
+            stepTimer.invalidate()
+            
+            if let id = storyId {
+                // Succès
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    currentStep = processingSteps.count - 1
+                }
                 
-                // Animation de completion
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                         isCompleted = true
                     }
                     
+                    createdStoryId = id
+                    
                     // Transition vers la vue de succès
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                         isPresented = false
                         showSuccess = true
                     }
+                }
+            } else {
+                // Erreur
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    hasError = true
+                    errorMessage = viewModel.creationError ?? "Une erreur inattendue s'est produite"
                 }
             }
         }
@@ -1275,6 +1364,8 @@ struct StoryProcessingView: View {
 struct StorySuccessView: View {
     @ObservedObject var storyData: StoryData
     @Binding var isPresented: Bool
+    let createdStoryId: String?
+    let onReadStory: () -> Void
     @State private var showConfetti = false
     @State private var buttonScale: CGFloat = 1.0
     
@@ -1388,10 +1479,9 @@ struct StorySuccessView: View {
                     
                     // Actions (style Monzo)
                     VStack(spacing: 12) {
-                        // Bouton principal
+                        // Bouton principal - Lire l'histoire
                         Button(action: {
-                            // Action pour lire l'histoire
-                            isPresented = false
+                            onReadStory()
                         }) {
                             HStack {
                                 Image(systemName: "book.open")

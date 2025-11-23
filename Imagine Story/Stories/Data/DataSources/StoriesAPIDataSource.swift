@@ -12,9 +12,85 @@ enum StoriesAPIDataSourceError: Error {
     case invalidResponse
     case decodingFailed
     case encodingFailed
+    case serverError(String)
+}
+
+// MARK: - Create Story Request DTO
+struct CreateStoryRequestDTO: Codable {
+    let title: String
+    let synopsis: String
+    let theme: String
+    let protagonist: String
+    let species: String
+    let childAge: Int
+    let numberOfChapters: Int
+    let language: String
+    let tone: String
+    let isPrivate: Bool
+    let generateCharacters: Bool
+    let generateChapterImages: Bool
+}
+
+// MARK: - Create Story Response DTO
+struct CreateStoryResponseDTO: Codable {
+    let id: String
+    let title: String
+    let synopsis: String
+    let slug: String
 }
 
 class StoriesApiDataSource {
+    
+    // MARK: - Create Story
+    func createStory(request: CreateStoryRequestDTO, token: String) async throws -> CreateStoryResponseDTO {
+        let endpoint = "http://localhost:3333/stories"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue(token, forHTTPHeaderField: "Authorization")
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(request)
+        } catch {
+            throw StoriesAPIDataSourceError.encodingFailed
+        }
+        
+        print("🔐 Create Story - Token envoyé: \(token)")
+        print("📤 Request body: \(String(data: urlRequest.httpBody ?? Data(), encoding: .utf8) ?? "")")
+        
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        print("📥 Response status: \(httpResponse.statusCode)")
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorMessage = String(data: data, encoding: .utf8) {
+                print("❌ Server error: \(errorMessage)")
+                throw StoriesAPIDataSourceError.serverError(errorMessage)
+            }
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            let responseDTO = try JSONDecoder().decode(CreateStoryResponseDTO.self, from: data)
+            print("✅ Story created successfully with ID: \(responseDTO.id)")
+            return responseDTO
+        } catch {
+            print("❌ Decoding error: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(jsonString)")
+            }
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
+    }
+    
     func getAllStories() async throws -> [StoryDTO] {
         let endpoint = "http://localhost:3333/stories"
         guard let url = URL(string: endpoint) else {

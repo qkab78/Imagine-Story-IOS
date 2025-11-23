@@ -23,20 +23,70 @@ class StoryCreationViewModel: ObservableObject {
     @Published var hasLanguagesError: Bool = false
     @Published var languagesErrorMessage: String?
     
+    // MARK: - Creation State
+    @Published var isCreatingStory: Bool = false
+    @Published var creationError: String?
+    @Published var createdStoryId: String?
+    
     // MARK: - Dependencies
     private let getAllThemesUseCase: GetAllThemesUseCaseProtocol
     private let getAllTonesUseCase: GetAllTonesUseCaseProtocol
     private let getAllLanguagesUseCase: GetAllLanguagesUseCaseProtocol
+    private let createStoryUseCase: CreateStoryUseCaseProtocol
     
     // MARK: - Initialization
     init(
         getAllThemesUseCase: GetAllThemesUseCaseProtocol = GetAllThemesUseCase(),
         getAllTonesUseCase: GetAllTonesUseCaseProtocol = GetAllTonesUseCase(),
-        getAllLanguagesUseCase: GetAllLanguagesUseCaseProtocol = GetAllLanguagesUseCase()
+        getAllLanguagesUseCase: GetAllLanguagesUseCaseProtocol = GetAllLanguagesUseCase(),
+        createStoryUseCase: CreateStoryUseCaseProtocol = CreateStoryUseCase()
     ) {
         self.getAllThemesUseCase = getAllThemesUseCase
         self.getAllTonesUseCase = getAllTonesUseCase
         self.getAllLanguagesUseCase = getAllLanguagesUseCase
+        self.createStoryUseCase = createStoryUseCase
+    }
+    
+    // MARK: - Create Story
+    func createStory(from storyData: StoryData, token: String) async -> String? {
+        guard let theme = storyData.theme,
+              let language = storyData.language,
+              let tone = storyData.tone else {
+            creationError = "Veuillez remplir tous les champs requis"
+            return nil
+        }
+        
+        isCreatingStory = true
+        creationError = nil
+        createdStoryId = nil
+        
+        let request = CreateStoryRequest(
+            title: storyData.title,
+            synopsis: storyData.synopsis,
+            theme: theme.id,
+            protagonist: storyData.protagonistName,
+            species: storyData.species,
+            childAge: storyData.targetAge,
+            numberOfChapters: storyData.chapterCount,
+            language: language.id,
+            tone: tone.id,
+            isPrivate: !storyData.isPublic,
+            generateCharacters: storyData.autoGenerateProfiles,
+            generateChapterImages: storyData.autoGenerateImages
+        )
+        
+        do {
+            let response = try await createStoryUseCase.execute(request: request, token: token)
+            createdStoryId = response.id
+            isCreatingStory = false
+            print("✅ Story created with ID: \(response.id)")
+            return response.id
+        } catch {
+            isCreatingStory = false
+            creationError = "Erreur lors de la création: \(error.localizedDescription)"
+            print("❌ Error creating story: \(error)")
+            return nil
+        }
     }
     
     // MARK: - Public Methods
