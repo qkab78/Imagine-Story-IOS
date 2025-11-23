@@ -35,7 +35,7 @@ class StoryMapper {
             chapterImages: chapterImages,
             createdAt: storyDTO.createdAt,
             isLiked: false,
-            language: StoryLanguage(id: storyDTO.language.id, name: storyDTO.language.name, code: storyDTO.language.code, isFree: storyDTO.language.isFree),
+            language: StoryLanguage(id: storyDTO.language.id, code: storyDTO.language.code, name: storyDTO.language.name, isFree: storyDTO.language.isFree),
             tone: StoryTone(id: storyDTO.tone.id, name: storyDTO.tone.name, description: storyDTO.tone.description)
         )
     }

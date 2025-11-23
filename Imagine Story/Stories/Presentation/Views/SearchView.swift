@@ -28,7 +28,7 @@ struct SearchView: View {
             chapterImages: [],
             createdAt: "2023-01-01",
             isLiked: false,
-            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            language: StoryLanguage(id: "1", code: "FR", name: "French", isFree: true),
             tone: StoryTone(id: "1", name: "calm", description: "test")
             
         ),
@@ -46,7 +46,7 @@ struct SearchView: View {
             chapterImages: [],
             createdAt: "2023-02-01",
             isLiked: true,
-            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            language: StoryLanguage(id: "1", code: "FR", name: "French", isFree: true),
             tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
@@ -63,7 +63,7 @@ struct SearchView: View {
             chapterImages: [],
             createdAt: "2023-03-01",
             isLiked: false,
-            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            language: StoryLanguage(id: "1", code: "FR", name: "French", isFree: true),
             tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
@@ -80,7 +80,7 @@ struct SearchView: View {
             chapterImages: [],
             createdAt: "2023-04-01",
             isLiked: true,
-            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            language: StoryLanguage(id: "1", code: "FR", name: "French", isFree: true),
             tone: StoryTone(id: "1", name: "calm", description: "test")
         ),
         Story(
@@ -97,7 +97,7 @@ struct SearchView: View {
             chapterImages: [],
             createdAt: "2023-05-01",
             isLiked: false,
-            language: StoryLanguage(id: "1", name: "French", code: "FR", isFree: true),
+            language: StoryLanguage(id: "1", code: "FR", name: "French", isFree: true),
             tone: StoryTone(id: "1", name: "calm", description: "test")
         )
     ]

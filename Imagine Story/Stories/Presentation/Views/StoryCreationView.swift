@@ -16,7 +16,7 @@ class StoryData: ObservableObject {
     @Published var species: String = ""
     @Published var targetAge: Int = 5
     @Published var chapterCount: Int = 5
-    @Published var language: String = "Français"
+    @Published var language: StoryLanguage?
     @Published var tone: StoryTone?
     @Published var autoGenerateProfiles: Bool = true
     @Published var autoGenerateImages: Bool = true
@@ -31,7 +31,7 @@ class StoryData: ObservableObject {
     }
     
     var isStep3Valid: Bool {
-        tone != nil
+        tone != nil && language != nil
     }
 }
 
@@ -257,7 +257,7 @@ struct StepThreeView: View {
                     
                     ChapterCounterView(chapterCount: $storyData.chapterCount)
                     
-                    LanguagePickerView(selectedLanguage: $storyData.language)
+                    LanguagePickerView(selectedLanguage: $storyData.language, viewModel: viewModel)
                 }
             }
             .padding()
@@ -749,39 +749,220 @@ struct ChapterCounterView: View {
 }
 
 struct LanguagePickerView: View {
-    @Binding var selectedLanguage: String
-    private let languages = ["Français", "English", "Español", "Deutsch"]
+    @Binding var selectedLanguage: StoryLanguage?
+    @ObservedObject var viewModel: StoryCreationViewModel
+    @State private var showPicker = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("Langue", systemImage: "globe")
-                .font(.headline)
-                .foregroundColor(greenLinearGradientBackground)
+            HStack {
+                Label("Langue", systemImage: "globe")
+                    .font(.headline)
+                    .foregroundColor(greenLinearGradientBackground)
+                Spacer()
+                if selectedLanguage != nil {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(greenLinearGradientBackground)
+                }
+            }
             
-            Menu {
-                ForEach(languages, id: \.self) { language in
-                    Button(language) {
-                        selectedLanguage = language
-                    }
-                }
-            } label: {
+            if viewModel.isLoadingLanguages {
                 HStack {
-                    Text(selectedLanguage)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
+                    ProgressView()
+                        .scaleEffect(0.7)
+                    Text("Chargement des langues...")
                         .foregroundColor(.secondary)
-                        .font(.caption)
                 }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            } else if viewModel.hasLanguagesError {
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundColor(.orange)
+                        Text("Erreur de chargement")
+                            .foregroundColor(.orange)
+                    }
+                    Button("Réessayer") {
+                        Task {
+                            await viewModel.retryLoadingLanguages()
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            } else {
+                Button(action: {
+                    showPicker = true
+                }) {
+                    HStack {
+                        if let language = selectedLanguage {
+                            Text("\(language.flag) \(language.displayName)")
+                                .foregroundColor(.primary)
+                            if !language.isFree {
+                                Image(systemName: "crown.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.caption)
+                            }
+                        } else {
+                            Text("Choisir une langue...")
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
             }
         }
         .padding()
         .background(.white)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .sheet(isPresented: $showPicker) {
+            LanguagePickerSheet(selectedLanguage: $selectedLanguage, viewModel: viewModel)
+        }
+    }
+}
+
+struct LanguagePickerSheet: View {
+    @Binding var selectedLanguage: StoryLanguage?
+    @ObservedObject var viewModel: StoryCreationViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if viewModel.isLoadingLanguages {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Chargement des langues...")
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if viewModel.hasLanguagesError {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        Text("Erreur de chargement")
+                            .font(.headline)
+                        if let errorMessage = viewModel.languagesErrorMessage {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        Button("Réessayer") {
+                            Task {
+                                await viewModel.retryLoadingLanguages()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        // Section langues gratuites
+                        Section("Langues gratuites") {
+                            ForEach(viewModel.languages.filter { $0.isFree }) { language in
+                                LanguageRowView(
+                                    language: language,
+                                    isSelected: selectedLanguage?.id == language.id,
+                                    action: {
+                                        selectedLanguage = language
+                                        dismiss()
+                                    }
+                                )
+                            }
+                        }
+                        
+                        // Section langues premium
+                        Section("Langues premium") {
+                            ForEach(viewModel.languages.filter { !$0.isFree }) { language in
+                                LanguageRowView(
+                                    language: language,
+                                    isSelected: selectedLanguage?.id == language.id,
+                                    action: {
+                                        selectedLanguage = language
+                                        dismiss()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Choisir une Langue")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Fermer") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+struct LanguageRowView: View {
+    let language: StoryLanguage
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                // Drapeau
+                Text(language.flag)
+                    .font(.title2)
+                    .frame(width: 40)
+                
+                // Nom de la langue
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(language.displayName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(language.code)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                // Badge premium si nécessaire
+                if !language.isFree {
+                    HStack(spacing: 4) {
+                        Image(systemName: "crown.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                        Text("Premium")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.orange.opacity(0.1))
+                    .clipShape(Capsule())
+                }
+                
+                // Checkmark de sélection
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -838,6 +1019,7 @@ struct SummaryCardView: View {
                 SummaryRowView(title: "Thème", value: storyData.theme?.name ?? "")
                 SummaryRowView(title: "Protagoniste", value: storyData.protagonistName)
                 SummaryRowView(title: "Tonalité", value: storyData.tone?.displayName ?? "")
+                SummaryRowView(title: "Langue", value: storyData.language != nil ? "\(storyData.language!.flag) \(storyData.language!.displayName)" : "")
                 SummaryRowView(title: "Chapitres", value: "\(storyData.chapterCount)")
             }
         }
