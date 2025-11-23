@@ -17,7 +17,7 @@ class StoryData: ObservableObject {
     @Published var targetAge: Int = 5
     @Published var chapterCount: Int = 5
     @Published var language: String = "Français"
-    @Published var tone: StoryToneMock?
+    @Published var tone: StoryTone?
     @Published var autoGenerateProfiles: Bool = true
     @Published var autoGenerateImages: Bool = true
     @Published var isPublic: Bool = false
@@ -35,26 +35,6 @@ class StoryData: ObservableObject {
     }
 }
 
-
-enum StoryToneMock: String, CaseIterable {
-    case joyful = "Joyeux"
-    case adventurous = "Aventureux"
-    case mysterious = "Mystérieux"
-    case educational = "Éducatif"
-    case tender = "Tendre"
-    case funny = "Amusant"
-    
-    var color: Color {
-        switch self {
-        case .joyful: return .yellow
-        case .adventurous: return .orange
-        case .mysterious: return .purple
-        case .educational: return .blue
-        case .tender: return .pink
-        case .funny: return .green
-        }
-    }
-}
 
 // MARK: - Main View
 struct StoryCreationView: View {
@@ -80,7 +60,7 @@ struct StoryCreationView: View {
                     StepTwoView(storyData: storyData)
                         .tag(2)
                     
-                    StepThreeView(storyData: storyData)
+                    StepThreeView(storyData: storyData, viewModel: viewModel)
                         .tag(3)
                     
                     StepFourView(storyData: storyData)
@@ -123,7 +103,7 @@ struct StoryCreationView: View {
             )
         }
         .task {
-            await viewModel.loadThemes()
+            await viewModel.loadAllData()
         }
     }
     
@@ -262,6 +242,7 @@ struct StepTwoView: View {
 // MARK: - Step 3: Story Settings  
 struct StepThreeView: View {
     @ObservedObject var storyData: StoryData
+    @ObservedObject var viewModel: StoryCreationViewModel
     
     var body: some View {
         ScrollView {
@@ -272,7 +253,7 @@ struct StepThreeView: View {
                 )
                 
                 VStack(spacing: 20) {
-                    TonePickerView(selectedTone: $storyData.tone)
+                    TonePickerView(selectedTone: $storyData.tone, viewModel: viewModel)
                     
                     ChapterCounterView(chapterCount: $storyData.chapterCount)
                     
@@ -634,7 +615,9 @@ struct AgeSliderView: View {
 }
 
 struct TonePickerView: View {
-    @Binding var selectedTone: StoryToneMock?
+    @Binding var selectedTone: StoryTone?
+    @ObservedObject var viewModel: StoryCreationViewModel
+    @State private var showPicker = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -649,23 +632,56 @@ struct TonePickerView: View {
                 }
             }
             
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
-                ForEach(StoryToneMock.allCases, id: \.self) { tone in
-                    Button(action: {
-                        selectedTone = tone
-                    }) {
-                        Text(tone.rawValue)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundColor(selectedTone == tone ? .white : .primary)
+            if viewModel.isLoadingTones {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                    Text("Chargement des tonalités...")
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            } else if viewModel.hasTonesError {
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundColor(.orange)
+                        Text("Erreur de chargement")
+                            .foregroundColor(.orange)
+                    }
+                    Button("Réessayer") {
+                        Task {
+                            await viewModel.retryLoadingTones()
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+            } else {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
+                    ForEach(viewModel.tones) { tone in
+                        Button(action: {
+                            selectedTone = tone
+                        }) {
+                            HStack(spacing: 4) {
+                                Text(tone.icon)
+                                    .font(.caption)
+                                Text(tone.displayName)
+                                    .font(.subheadline.weight(.medium))
+                            }
+                            .foregroundColor(selectedTone?.id == tone.id ? .white : .primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(selectedTone == tone ? 
+                                    .fill(selectedTone?.id == tone.id ? 
                                           LinearGradient(colors: [tone.color.opacity(0.8), tone.color], startPoint: .top, endPoint: .bottom) :
                                           LinearGradient(colors: [Color(.systemGray6)], startPoint: .top, endPoint: .bottom)
                                     )
                             )
+                        }
                     }
                 }
             }
@@ -821,7 +837,7 @@ struct SummaryCardView: View {
                 SummaryRowView(title: "Titre", value: storyData.title)
                 SummaryRowView(title: "Thème", value: storyData.theme?.name ?? "")
                 SummaryRowView(title: "Protagoniste", value: storyData.protagonistName)
-                SummaryRowView(title: "Tonalité", value: storyData.tone?.rawValue ?? "")
+                SummaryRowView(title: "Tonalité", value: storyData.tone?.displayName ?? "")
                 SummaryRowView(title: "Chapitres", value: "\(storyData.chapterCount)")
             }
         }

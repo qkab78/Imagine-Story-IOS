@@ -134,4 +134,29 @@ class StoriesApiDataSource {
             throw StoriesAPIDataSourceError.decodingFailed
         }
     }
+    
+    func getAllTones() async throws -> [StoryToneDTO] {
+        let endpoint = "http://localhost:3333/stories/all/tones"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            let tones = try JSONDecoder().decode([StoryToneDTO].self, from: data)
+            print("✅ Successfully decoded \(tones.count) tones from API")
+            return tones
+        } catch {
+            print("❌ Decoding error: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(jsonString)")
+            }
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
+    }
 }

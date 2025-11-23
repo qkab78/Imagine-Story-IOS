@@ -5,8 +5,10 @@
 //  Created by Quentin Kabasele on 23/11/2025.
 //
 
+import Foundation
+
 struct StoryToneDTO: Identifiable, Codable {
-    var id: String
-    var name: String
-    var description: String
+    let id: String
+    let name: String
+    let description: String
 }
