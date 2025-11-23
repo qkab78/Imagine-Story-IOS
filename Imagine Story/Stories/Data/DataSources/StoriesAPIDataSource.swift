@@ -109,4 +109,29 @@ class StoriesApiDataSource {
             throw StoriesAPIDataSourceError.decodingFailed
         }
     }
+    
+    func getAllThemes() async throws -> [StoryThemeDTO] {
+        let endpoint = "http://localhost:3333/stories/all/themes"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            let themes = try JSONDecoder().decode([StoryThemeDTO].self, from: data)
+            print("✅ Successfully decoded \(themes.count) themes from API")
+            return themes
+        } catch {
+            print("❌ Decoding error: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(jsonString)")
+            }
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
+    }
 }

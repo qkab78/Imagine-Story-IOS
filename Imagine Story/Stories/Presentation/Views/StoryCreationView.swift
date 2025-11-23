@@ -35,29 +35,6 @@ class StoryData: ObservableObject {
     }
 }
 
-enum StoryTheme: String, CaseIterable {
-    case adventure = "Aventure et exploration"
-    case friendship = "Amitié et solidarité"
-    case magic = "Magie et fantastique"
-    case animals = "Animaux et nature"
-    case family = "Famille et foyer"
-    case learning = "Apprentissage et école"
-    case courage = "Courage et dépassement"
-    case mystery = "Mystère et enquête"
-    
-    var icon: String {
-        switch self {
-        case .adventure: return "🗺️"
-        case .friendship: return "🤝"
-        case .magic: return "✨"
-        case .animals: return "🐻"
-        case .family: return "🏠"
-        case .learning: return "📚"
-        case .courage: return "💪"
-        case .mystery: return "🔍"
-        }
-    }
-}
 
 enum StoryToneMock: String, CaseIterable {
     case joyful = "Joyeux"
@@ -82,6 +59,7 @@ enum StoryToneMock: String, CaseIterable {
 // MARK: - Main View
 struct StoryCreationView: View {
     @StateObject private var storyData = StoryData()
+    @StateObject private var viewModel = StoryCreationViewModel()
     @State private var currentStep = 1
     @State private var isAnimating = false
     @State private var showProcessingView = false
@@ -96,7 +74,7 @@ struct StoryCreationView: View {
                 
                 // Content
                 TabView(selection: $currentStep) {
-                    StepOneView(storyData: storyData)
+                    StepOneView(storyData: storyData, viewModel: viewModel)
                         .tag(1)
                     
                     StepTwoView(storyData: storyData)
@@ -143,6 +121,9 @@ struct StoryCreationView: View {
                 storyData: storyData,
                 isPresented: $showSuccessView
             )
+        }
+        .task {
+            await viewModel.loadThemes()
         }
     }
     
@@ -195,6 +176,7 @@ struct ProgressBarView: View {
 // MARK: - Step 1: Story Basics
 struct StepOneView: View {
     @ObservedObject var storyData: StoryData
+    @ObservedObject var viewModel: StoryCreationViewModel
     @State private var showThemePicker = false
     
     var body: some View {
@@ -227,14 +209,15 @@ struct StepOneView: View {
                     // Theme Selector
                     ThemeSelectorView(
                         selectedTheme: $storyData.theme,
-                        showPicker: $showThemePicker
+                        showPicker: $showThemePicker,
+                        viewModel: viewModel
                     )
                 }
             }
             .padding()
         }
         .sheet(isPresented: $showThemePicker) {
-            ThemePickerSheet(selectedTheme: $storyData.theme)
+            ThemePickerSheet(selectedTheme: $storyData.theme, viewModel: viewModel)
         }
     }
 }
@@ -464,6 +447,7 @@ struct CustomTextEditor: View {
 struct ThemeSelectorView: View {
     @Binding var selectedTheme: StoryTheme?
     @Binding var showPicker: Bool
+    @ObservedObject var viewModel: StoryCreationViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -478,22 +462,56 @@ struct ThemeSelectorView: View {
                 }
             }
             
-            Button(action: { showPicker = true }) {
+            Button(action: {
+                if viewModel.isLoadingThemes {
+                    return // Empêcher l'ouverture pendant le chargement
+                }
+                showPicker = true
+            }) {
                 HStack {
-                    if let theme = selectedTheme {
-                        Text("\(theme.icon) \(theme.rawValue)")
+                    if viewModel.isLoadingThemes {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text("Chargement des thèmes...")
+                                .foregroundColor(.secondary)
+                        }
+                    } else if viewModel.hasError {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundColor(.orange)
+                            Text("Erreur - Appuyer pour réessayer")
+                                .foregroundColor(.orange)
+                        }
+                    } else if let theme = selectedTheme {
+                        Text("\(theme.icon) \(theme.name)")
                             .foregroundColor(.primary)
                     } else {
                         Text("Choisir un thème...")
                             .foregroundColor(.secondary)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.secondary)
+                    if !viewModel.isLoadingThemes {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
+            }
+            .disabled(viewModel.isLoadingThemes)
+            
+            if viewModel.hasError {
+                Button(action: {
+                    Task {
+                        await viewModel.retryLoadingThemes()
+                    }
+                }) {
+                    Text("Réessayer")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
             }
         }
         .padding()
@@ -505,24 +523,52 @@ struct ThemeSelectorView: View {
 
 struct ThemePickerSheet: View {
     @Binding var selectedTheme: StoryTheme?
+    @ObservedObject var viewModel: StoryCreationViewModel
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(StoryTheme.allCases, id: \.self) { theme in
-                    Button(action: {
-                        selectedTheme = theme
-                        dismiss()
-                    }) {
-                        HStack {
-                            Text("\(theme.icon) \(theme.rawValue)")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            if selectedTheme == theme {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+            Group {
+                if viewModel.isLoadingThemes {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Chargement des thèmes...")
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if viewModel.hasError {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        Text("Erreur de chargement")
+                            .font(.headline)
+                        if let errorMessage = viewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        Button("Réessayer") {
+                            Task {
+                                await viewModel.retryLoadingThemes()
                             }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        ForEach(viewModel.themes) { theme in
+                            ThemeRowView(
+                                theme: theme,
+                                isSelected: selectedTheme?.id == theme.id,
+                                action: {
+                                    selectedTheme = theme
+                                    dismiss()
+                                }
+                            )
                         }
                     }
                 }
@@ -534,6 +580,11 @@ struct ThemePickerSheet: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Fermer") { dismiss() }
                 }
+            }
+        }
+        .task {
+            if viewModel.themes.isEmpty && !viewModel.isLoadingThemes {
+                await viewModel.loadThemes()
             }
         }
     }
@@ -768,7 +819,7 @@ struct SummaryCardView: View {
             
             VStack(alignment: .leading, spacing: 8) {
                 SummaryRowView(title: "Titre", value: storyData.title)
-                SummaryRowView(title: "Thème", value: storyData.theme?.rawValue ?? "")
+                SummaryRowView(title: "Thème", value: storyData.theme?.name ?? "")
                 SummaryRowView(title: "Protagoniste", value: storyData.protagonistName)
                 SummaryRowView(title: "Tonalité", value: storyData.tone?.rawValue ?? "")
                 SummaryRowView(title: "Chapitres", value: "\(storyData.chapterCount)")
@@ -1126,7 +1177,7 @@ struct StorySuccessView: View {
                             HStack {
                                 Image(systemName: "tag.fill")
                                     .foregroundColor(.purple)
-                                Text("\(theme.icon) \(theme.rawValue)")
+                                Text("\(theme.icon) \(theme.name)")
                                     .font(.subheadline.weight(.medium))
                                     .foregroundColor(.secondary)
                                 Spacer()
@@ -1200,6 +1251,49 @@ struct StorySuccessView: View {
     private func getRandomColor(for index: Int) -> Color {
         let colors: [Color] = [.red, .blue, .green, .orange, .purple, .pink, .yellow]
         return colors[index % colors.count]
+    }
+}
+
+// MARK: - Theme Row View
+struct ThemeRowView: View {
+    let theme: StoryTheme
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                // Icône du thème
+                Text(theme.icon)
+                    .font(.title2)
+                    .frame(width: 40)
+                
+                // Contenu principal
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(theme.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text(theme.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                }
+                
+                Spacer()
+                
+                // Checkmark de sélection
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
     }
 }
 
