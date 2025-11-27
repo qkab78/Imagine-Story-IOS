@@ -126,9 +126,6 @@ let tealLinearGradientBackground = Color(red: 0.012, green: 0.855, blue: 0.776)
 
 let ViewLinearGradientBackground = LinearGradient(colors:[Color(red: 1, green: 0.973, blue: 0.882), Color(red: 1, green: 0.878, blue: 0.941)], startPoint: .topLeading, endPoint: .bottomTrailing)
 
-func goToStoryCreationPage() {
-    print("navigating to story creation page")
-}
 enum StoryError: Error {
     case invalidResponse
     case invalidData

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct StoryReadView: View {
     @StateObject var viewModel = StoryReadViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     var storyId: String?
     @Environment(\.dismiss) private var dismiss
     
