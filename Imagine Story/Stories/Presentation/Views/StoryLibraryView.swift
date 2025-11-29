@@ -12,6 +12,7 @@ struct StoryLibraryView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var shouldNavigate = false
     @State private var selectedStoryId: String?
+    @State private var searchText = ""
     
     // Données fictives de livres (fallback)
     private let mockStories: [Story] = [
@@ -178,6 +179,19 @@ struct StoryLibraryView: View {
         Color(red: 0.129, green: 0.588, blue: 0.953) // Deep blue (blueLinearGradientBackground)
     ]
     
+    // Histoires filtrées par recherche
+    var filteredStories: [Story] {
+        if searchText.isEmpty {
+            return viewModel.stories
+        } else {
+            return viewModel.stories.filter { story in
+                story.title.localizedCaseInsensitiveContains(searchText) ||
+                story.synopsis.localizedCaseInsensitiveContains(searchText) ||
+                story.themeName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -197,7 +211,7 @@ struct StoryLibraryView: View {
                             GridItem(.flexible()),
                             GridItem(.flexible())
                         ], spacing: 24) {
-                            ForEach(Array(viewModel.stories.enumerated()), id: \.element.id) { index, story in
+                            ForEach(Array(filteredStories.enumerated()), id: \.element.id) { index, story in
                                 BookCoverView(
                                     story: story,
                                     coverColor: coverColors[index % coverColors.count]
@@ -211,6 +225,25 @@ struct StoryLibraryView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 20)
                         .padding(.bottom, 40)
+                        
+                        // Message si aucun résultat
+                        if filteredStories.isEmpty && !searchText.isEmpty {
+                            VStack(spacing: 16) {
+                                Image(systemName: "book.closed")
+                                    .font(.system(size: 60))
+                                    .foregroundColor(.secondary)
+                                
+                                Text("Aucune histoire trouvée")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                
+                                Text("Essayez avec d'autres mots-clés")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 100)
+                        }
                     }
                     .background {
                         ViewLinearGradientBackground
@@ -221,6 +254,11 @@ struct StoryLibraryView: View {
             .navigationTitle("Librairie")
             .navigationBarTitleDisplayMode(.large)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Rechercher une histoire"
+            )
             .navigationDestination(isPresented: $shouldNavigate) {
                 StoryReadView(storyId: selectedStoryId)
             }
