@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct StoryLibraryView: View {
-    @State private var stories: [Story] = []
+    @StateObject private var viewModel = StoryLibraryViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var shouldNavigate = false
     @State private var selectedStoryId: String?
     
-    // Données fictives de livres
+    // Données fictives de livres (fallback)
     private let mockStories: [Story] = [
         Story(
             id: "1",
@@ -179,29 +180,43 @@ struct StoryLibraryView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16)
-                ], spacing: 24) {
-                    ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
-                        BookCoverView(
-                            story: story,
-                            coverColor: coverColors[index % coverColors.count]
-                        )
-                        .onTapGesture {
-                            selectedStoryId = story.id
-                            shouldNavigate = true
+            Group {
+                if viewModel.isLoading {
+                    LoadingView()
+                } else if let errorMessage = viewModel.errorMessage {
+                    ErrorView(errorMessage: errorMessage) {
+                        Task {
+                            if let token = authViewModel.user?.token {
+                                await viewModel.retryLoadStories(token: token)
+                            }
                         }
                     }
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 24) {
+                            ForEach(Array(viewModel.stories.enumerated()), id: \.element.id) { index, story in
+                                BookCoverView(
+                                    story: story,
+                                    coverColor: coverColors[index % coverColors.count]
+                                )
+                                .onTapGesture {
+                                    selectedStoryId = story.id
+                                    shouldNavigate = true
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                        .padding(.bottom, 40)
+                    }
+                    .background {
+                        ViewLinearGradientBackground
+                            .ignoresSafeArea()
+                    }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 40)
-            }
-            .background {
-                ViewLinearGradientBackground
-                    .ignoresSafeArea()
             }
             .navigationTitle("Librairie")
             .navigationBarTitleDisplayMode(.large)
@@ -210,8 +225,13 @@ struct StoryLibraryView: View {
                 StoryReadView(storyId: selectedStoryId)
             }
         }
-        .onAppear {
-            stories = mockStories
+        .task {
+            if let token = authViewModel.user?.token {
+                await viewModel.loadUserStories(token: token)
+            } else {
+                // Fallback sur les données fictives si pas de token
+                viewModel.stories = mockStories
+            }
         }
     }
 }
@@ -223,14 +243,52 @@ struct BookCoverView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Couverture du livre
-            ZStack {
-                Rectangle()
-                    .fill(coverColor)
-                    .frame(height: 240)
-                    .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+            // Couverture du livre avec taille fixe
+            ZStack(alignment: .topLeading) {
+                // Background avec image ou couleur de fallback
+                if !story.coverImage.isEmpty, let url = URL(string: story.coverImage) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            // Placeholder pendant le chargement
+                            coverColor
+                                .frame(height: 240)
+                                .overlay {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                        case .success(let image):
+                            // Image chargée avec succès
+                            image
+                                .resizable()
+                                .frame(height: 240)
+                        case .failure:
+                            // Fallback sur la couleur en cas d'erreur
+                            coverColor
+                                .frame(height: 240)
+                        @unknown default:
+                            coverColor
+                                .frame(height: 240)
+                        }
+                    }
+                } else {
+                    // Pas d'URL valide, utilise la couleur
+                    coverColor
+                        .frame(height: 240)
+                }
                 
+                // Overlay gradient pour améliorer la lisibilité du texte
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.6),
+                        Color.black.opacity(0.3),
+                        Color.clear
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                
+                // Contenu texte
                 VStack(alignment: .leading, spacing: 12) {
                     // Titre principal
                     Text(story.title)
@@ -238,7 +296,7 @@ struct BookCoverView: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
                         .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                     
                     Spacer()
                     
@@ -248,22 +306,25 @@ struct BookCoverView: View {
                         .foregroundColor(.white.opacity(0.95))
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                 }
                 .padding(20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
+            .frame(height: 240)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
             
             // Informations du livre (auteur/thème)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(story.themeName)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
+            Text(story.themeName)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
     StoryLibraryView()
+        .environmentObject(AuthViewModel())
 }

@@ -14,6 +14,7 @@ enum StoryRepositoryError: Error {
     case likeStoryFailed(Error)
     case searchStoriesFailed(Error)
     case createStoryFailed(Error)
+    case fetchUserStoriesFailed(Error)
 }
 
 class StoryRepository {
@@ -96,6 +97,16 @@ class StoryRepository {
         } catch {
             print("❌ Error creating story: \(error.localizedDescription)")
             throw StoryRepositoryError.createStoryFailed(error)
+        }
+    }
+    
+    func getUserStories(token: String) async throws -> [Story] {
+        do {
+            let storiesData = try await storiesDataSource.getUserStories(token: token)
+            return storiesData.map(StoryMapper.map)
+        } catch {
+            print("❌ Error fetching user stories: \(error.localizedDescription)")
+            throw StoryRepositoryError.fetchUserStoriesFailed(error)
         }
     }
 }
