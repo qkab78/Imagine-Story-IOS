@@ -24,12 +24,13 @@ struct ContentView: View {
                 }
                 Tab("Library", systemImage: "book.pages", value: 1) {
                     NavigationStack {
-                        StorySearchView(searchText: $searchText)
-                            .searchable(text: $searchText, prompt: "Rechercher une histoire...")
-                            .searchToolbarBehavior(.minimize)
-                            .searchSuggestions {
-                                // Suggestions vides pour éviter le background par défaut
-                            }
+                        StoryLibraryView()
+//                        StorySearchView(searchText: $searchText)
+//                            .searchable(text: $searchText, prompt: "Rechercher une histoire...")
+//                            .searchToolbarBehavior(.minimize)
+//                            .searchSuggestions {
+//                                // Suggestions vides pour éviter le background par défaut
+//                            }
                     }
                 }
                 

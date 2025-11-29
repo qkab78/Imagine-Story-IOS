@@ -276,4 +276,46 @@ class StoriesApiDataSource {
             throw StoriesAPIDataSourceError.decodingFailed
         }
     }
+    
+    func getUserStories(token: String) async throws -> [StoryDTO] {
+        let endpoint = "http://localhost:3333/stories/users/me/stories"
+        guard let url = URL(string: endpoint) else {
+            throw StoriesAPIDataSourceError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "Authorization")
+        
+        print("🔐 Get User Stories - Token envoyé: \(token)")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        print("📥 Response status: \(httpResponse.statusCode)")
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if let errorMessage = String(data: data, encoding: .utf8) {
+                print("❌ Server error: \(errorMessage)")
+                throw StoriesAPIDataSourceError.serverError(errorMessage)
+            }
+            throw StoriesAPIDataSourceError.invalidResponse
+        }
+        
+        do {
+            let stories = try JSONDecoder().decode([StoryDTO].self, from: data)
+            print("✅ Successfully decoded \(stories.count) user stories from API")
+            return stories
+        } catch {
+            print("❌ Decoding error: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📄 Raw response: \(jsonString)")
+            }
+            throw StoriesAPIDataSourceError.decodingFailed
+        }
+    }
 }
