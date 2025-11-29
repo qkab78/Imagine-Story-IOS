@@ -10,6 +10,7 @@ import SwiftUI
 
 struct StoryLectureView: View {
     @StateObject var viewModel = StoryReadViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     var storyId: String?
     @State private var selectedChapter: Int = -1 // -1 pour la couverture, 0+ pour les chapitres
     @State private var showConclusion: Bool = false
@@ -326,4 +327,5 @@ struct StoryLectureView: View {
 #Preview {
     StoryLectureView()
         .environmentObject(StoryReadViewModel())
+        .environmentObject(AuthViewModel())
 }

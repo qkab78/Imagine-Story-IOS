@@ -7,13 +7,12 @@
 
 import Foundation
 
-struct Story: Identifiable {
+struct Story: Identifiable, Codable {
     let id: String
     let title: String
     let synopsis: String
     let coverImage: String
     let numberOfChapters: Int
-    let tone: String
     let theme: String
     let themeName: String
     let themeDescription: String
@@ -24,4 +23,6 @@ struct Story: Identifiable {
     let chapterImages: [StoryChapterImage]
     let createdAt: String
     let isLiked: Bool
+    let language: StoryLanguage
+    let tone: StoryTone
 }

@@ -13,7 +13,6 @@ struct StoryDTO: Codable {
     let synopsis: String
     let coverImage: String
     let numberOfChapters: Int
-    let tone: String
     let theme: String
     let themeName: String
     let themeDescription: String
@@ -23,4 +22,6 @@ struct StoryDTO: Codable {
     let chapters: [StoryChapterDTO]
     let chapterImages: [StoryChapterImageDTO]
     let createdAt: String
-}
+    let language: StoryLanguageDTO
+    let tone: StoryToneDTO
+} 

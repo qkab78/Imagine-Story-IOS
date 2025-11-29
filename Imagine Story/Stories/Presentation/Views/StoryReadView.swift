@@ -10,6 +10,7 @@ import SwiftUI
 
 struct StoryReadView: View {
     @StateObject var viewModel = StoryReadViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     var storyId: String?
     @Environment(\.dismiss) private var dismiss
     
@@ -174,7 +175,7 @@ struct AppleBooksStyleView: View {
                     // Catégories/Tags
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            CategoryTag(text: story.tone, icon: "book.closed")
+                            CategoryTag(text: story.tone.name, icon: "book.closed")
                             CategoryTag(text: story.themeName, icon: "moon")
                             CategoryTag(text: "\(story.numberOfChapters) chapitres", icon: "list.number")
                         }

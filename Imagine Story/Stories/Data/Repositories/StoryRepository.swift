@@ -13,6 +13,7 @@ enum StoryRepositoryError: Error {
     case fetchStoryByIdFailed(Error)
     case likeStoryFailed(Error)
     case searchStoriesFailed(Error)
+    case createStoryFailed(Error)
 }
 
 class StoryRepository {
@@ -64,6 +65,37 @@ class StoryRepository {
         } catch {
             print("❌ Error searching stories with query '\(query)': \(error.localizedDescription)")
             throw StoryRepositoryError.searchStoriesFailed(error)
+        }
+    }
+    
+    func createStory(request: CreateStoryRequest, token: String) async throws -> CreateStoryResponse {
+        do {
+            let requestDTO = CreateStoryRequestDTO(
+                title: request.title,
+                synopsis: request.synopsis,
+                theme: request.theme,
+                protagonist: request.protagonist,
+                species: request.species,
+                childAge: request.childAge,
+                numberOfChapters: request.numberOfChapters,
+                language: request.language,
+                tone: request.tone,
+                isPrivate: request.isPrivate,
+                generateCharacters: request.generateCharacters,
+                generateChapterImages: request.generateChapterImages
+            )
+            
+            let responseDTO = try await storiesDataSource.createStory(request: requestDTO, token: token)
+            
+            return CreateStoryResponse(
+                id: responseDTO.id,
+                title: responseDTO.title,
+                synopsis: responseDTO.synopsis,
+                slug: responseDTO.slug
+            )
+        } catch {
+            print("❌ Error creating story: \(error.localizedDescription)")
+            throw StoryRepositoryError.createStoryFailed(error)
         }
     }
 }

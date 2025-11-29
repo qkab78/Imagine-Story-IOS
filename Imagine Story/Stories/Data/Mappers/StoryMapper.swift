@@ -11,6 +11,7 @@ class StoryMapper {
     static func map(storyDTO: StoryDTO) -> Story {
         var chapters: [StoryChapter] = []
         var chapterImages: [StoryChapterImage] = []
+        
 
         storyDTO.chapters.forEach { chapter in
             chapters.append(StoryChapter(title: chapter.title, content: chapter.content))
@@ -24,7 +25,6 @@ class StoryMapper {
             synopsis: storyDTO.synopsis,
             coverImage: "http://localhost:3333/images/covers/\(storyDTO.coverImage)",
             numberOfChapters: storyDTO.numberOfChapters,
-            tone: storyDTO.tone,
             theme: storyDTO.theme,
             themeName: storyDTO.themeName,
             themeDescription: storyDTO.themeDescription,
@@ -34,7 +34,9 @@ class StoryMapper {
             chapters: chapters,
             chapterImages: chapterImages,
             createdAt: storyDTO.createdAt,
-            isLiked: false
+            isLiked: false,
+            language: StoryLanguage(id: storyDTO.language.id, code: storyDTO.language.code, name: storyDTO.language.name, isFree: storyDTO.language.isFree),
+            tone: StoryTone(id: storyDTO.tone.id, name: storyDTO.tone.name, description: storyDTO.tone.description)
         )
     }
 }
